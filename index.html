@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chronicle // Expressive RSS Reader</title>
-    <!-- Import Google Sans Flex, Inter, and Material Symbols -->
+    <!-- Import Google Sans Flex, Inter, Orbitron (Gamer Font), and Material Symbols -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..1000&family=Inter:wght@300;400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..1000&family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400..900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
     <!-- Tailwind CSS for utility structural layouts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -17,6 +17,7 @@
                     fontFamily: {
                         sans: ['"Google Sans Flex"', 'Inter', 'sans-serif'],
                         inter: ['Inter', 'sans-serif'],
+                        gamer: ['"Orbitron"', 'sans-serif'],
                     },
                     colors: {
                         m3: {
@@ -64,6 +65,11 @@
 
         h1, h2, h3, .m3-title {
             font-variation-settings: "opsz" 24, "wght" 700;
+        }
+
+        .font-gamer {
+            font-family: "Orbitron", sans-serif;
+            letter-spacing: 0.05em;
         }
 
         ::-webkit-scrollbar {
@@ -142,23 +148,22 @@
 </head>
 <body class="min-h-screen flex flex-col antialiased">
 
-    <!-- TOP APP BAR -->
-    <header class="sticky top-0 z-50 bg-m3-background/90 backdrop-blur-md border-b border-m3-outline/10 px-4 md:px-8 py-4 flex items-center justify-between">
+    <!-- TOP APP BAR (Simplified) -->
+    <header class="sticky top-0 z-50 bg-m3-background/90 backdrop-blur-md border-b border-m3-outline/10 px-4 md:px-8 py-3.5 flex items-center justify-between">
         <div class="flex items-center gap-3">
-            <span class="material-symbols-outward text-3xl text-m3-primary font-bold">rss_feed</span>
+            <span class="material-symbols-outlined text-3xl text-m3-primary font-bold">rss_feed</span>
             <div>
-                <h1 class="text-xl md:text-2xl font-bold tracking-tight text-m3-onBackground flex items-center gap-2">
-                    Chronicle <span class="text-xs bg-m3-primaryContainer text-m3-onPrimaryContainer px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider">GitHub Pages Ready</span>
+                <h1 class="text-xl md:text-2xl font-gamer font-bold tracking-tight text-m3-onBackground flex items-center gap-2">
+                    CHRONICLE <span class="text-[10px] font-sans bg-m3-primaryContainer text-m3-onPrimaryContainer px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider">STATIC</span>
                 </h1>
-                <p class="text-xs text-m3-onSurfaceVariant/70 hidden sm:block">Material 3 Expressive Static RSS Feed Client</p>
             </div>
         </div>
 
         <div class="flex items-center gap-2">
             <!-- Unified Feeds Management Button -->
-            <button onclick="openModal('manage-feeds-modal')" class="m3-btn flex items-center gap-2 bg-m3-primary text-m3-onPrimary hover:bg-m3-primary/90 px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg hover:shadow-xl">
-                <span class="material-symbols-outlined text-lg">dynamic_feed</span>
-                <span>Feeds</span>
+            <button onclick="openModal('manage-feeds-modal')" class="m3-btn font-gamer flex items-center gap-2 bg-m3-primary text-m3-onPrimary hover:bg-m3-primary/90 px-4 py-2 rounded-full text-xs font-bold tracking-wide shadow-lg hover:shadow-xl">
+                <span class="material-symbols-outlined text-base">dynamic_feed</span>
+                <span>FEEDS</span>
             </button>
         </div>
     </header>
@@ -236,12 +241,14 @@
 
         </section>
 
-        <!-- SIDEBAR: FEEDS LIST -->
+        <!-- SIDEBAR: FEEDS LIST & INTEGRATED SETTINGS -->
         <aside class="order-2 lg:order-1 lg:col-span-1 flex flex-col gap-4">
+            
+            <!-- YOUR SUBSCRIPTIONS PANEL -->
             <div class="bg-m3-surfaceContainer rounded-3xl p-5 border border-m3-outline/10 shadow-sm flex flex-col gap-4">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-md font-bold tracking-wide text-m3-onSurfaceVariant uppercase text-xs">Your Subscriptions</h2>
-                    <span id="feed-count" class="text-xs bg-m3-secondaryContainer text-m3-onSecondaryContainer px-2 py-0.5 rounded-full font-medium">0</span>
+                    <h2 class="text-xs font-gamer font-bold tracking-wider text-m3-onSurfaceVariant uppercase">Your Channels</h2>
+                    <span id="feed-count" class="text-[10px] font-gamer bg-m3-secondaryContainer text-m3-onSecondaryContainer px-2 py-0.5 rounded-full font-bold">0</span>
                 </div>
 
                 <div class="flex flex-col gap-1 overflow-y-auto max-h-[300px] lg:max-h-[500px]" id="sidebar-feeds-list">
@@ -257,27 +264,34 @@
                     </button>
                     <button onclick="toggleUnreadOnly()" id="filter-unread-btn" class="flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1">
                         <span class="material-symbols-outlined">bookmark_border</span>
-                        <span class="flex-grow">Bookmarked Articles</span>
+                        <span class="flex-grow">Bookmarks</span>
                         <span id="bookmark-count" class="text-xs bg-m3-outlineVariant text-m3-onSurfaceVariant px-2 py-0.5 rounded-full">0</span>
                     </button>
                 </div>
             </div>
 
-            <!-- PROXIES UTILITY INFO -->
-            <div class="bg-m3-surfaceContainerLow rounded-3xl p-5 border border-m3-outline/10 text-xs text-m3-onSurfaceVariant/80 flex flex-col gap-3">
-                <div class="flex items-center gap-2 text-m3-primary font-semibold">
-                    <span class="material-symbols-outlined text-sm">shield</span>
-                    <span>CORS Proxy Configuration</span>
+            <!-- INTEGRATED SIDEBAR SETTINGS (Moved here!) -->
+            <div class="bg-m3-surfaceContainerLow rounded-3xl p-5 border border-m3-outline/10 flex flex-col gap-4">
+                <div class="flex items-center gap-2 text-m3-primary font-gamer font-bold text-xs tracking-wider">
+                    <span class="material-symbols-outlined text-sm">tune</span>
+                    <span>READER SETTINGS</span>
                 </div>
-                <p>Browsers restrict direct XML fetching from other domains. We route queries through high-performance CORS proxies.</p>
-                <select id="proxy-selector" onchange="updateProxySetting()" class="bg-m3-surfaceContainerHighest text-m3-onSurface rounded-xl p-2 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer w-full">
-                    <option value="rss2json">RSS-to-JSON API (Highly Stable & Fast)</option>
-                    <option value="corsproxy">Corsproxy.io (Standard Proxy)</option>
-                    <option value="allorigins">AllOrigins API (Standard Proxy)</option>
-                    <option value="codetabs">Codetabs Proxy (Alternative)</option>
-                    <option value="none">Direct Request (No proxy)</option>
-                </select>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label for="proxy-selector" class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant/80 uppercase tracking-wide mb-1.5">CORS Proxy Mode</label>
+                        <select id="proxy-selector" onchange="updateProxySetting()" class="bg-m3-surfaceContainerHighest text-m3-onSurface rounded-xl p-2.5 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer w-full text-xs">
+                            <option value="rss2json">RSS-to-JSON API (Recommended)</option>
+                            <option value="corsproxy">Corsproxy.io (Standard)</option>
+                            <option value="allorigins">AllOrigins API (Standard)</option>
+                            <option value="codetabs">Codetabs Proxy (Alternative)</option>
+                            <option value="none">Direct Request (No proxy)</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-[10px] text-m3-onSurfaceVariant/60 leading-relaxed">Browsers block fetching XML directly from different domains. Choose an active proxy if feeds fail to fetch.</p>
             </div>
+
         </aside>
 
     </main>
@@ -285,12 +299,12 @@
     <!-- FOOTER -->
     <footer class="bg-m3-surfaceContainerLowest py-8 px-4 text-center text-xs text-m3-onSurfaceVariant/50 border-t border-m3-outline/10 mt-12">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-            <p>© 2026 Chronicle RSS. Powered securely client-side via LocalStorage.</p>
+            <p class="font-gamer text-[10px] tracking-widest">© 2026 CHRONICLE RSS. SECURE STORAGE ENABLED.</p>
         </div>
     </footer>
 
 
-    <!-- COMBINED FEEDS MANAGEMENT MODAL (ADD, DELETE, IMPORT, EXPORT) -->
+    <!-- COMBINED FEEDS MANAGEMENT MODAL (ADD, EDIT, DELETE, IMPORT, EXPORT) -->
     <div id="manage-feeds-modal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 hidden backdrop-blur-xs">
         <div class="bg-m3-surface rounded-[28px] max-w-4xl w-full p-6 md:p-8 shadow-2xl border border-m3-outline/20 flex flex-col max-h-[90vh]">
             
@@ -300,7 +314,7 @@
                     <div class="p-2 bg-m3-primaryContainer text-m3-onPrimaryContainer rounded-xl">
                         <span class="material-symbols-outlined">settings_suggest</span>
                     </div>
-                    <h3 class="text-xl font-bold text-m3-onBackground">Feeds Management Hub</h3>
+                    <h3 class="text-xl font-gamer font-bold tracking-tight text-m3-onBackground">FEEDS CONTROL HUB</h3>
                 </div>
                 <button onclick="closeModal('manage-feeds-modal')" class="text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/40 p-2 rounded-full flex items-center justify-center">
                     <span class="material-symbols-outlined">close</span>
@@ -310,28 +324,28 @@
             <!-- Two Column Layout in Modal -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto pr-1 flex-grow">
                 
-                <!-- Left Column: Add Subscription & Sync -->
+                <!-- Left Column: Add/Edit Subscription -->
                 <div class="space-y-6">
                     <div class="bg-m3-surfaceContainerLow p-5 rounded-2xl border border-m3-outline/10">
-                        <h4 class="text-sm font-bold text-m3-primary uppercase tracking-wide mb-4">Subscribe to a new Feed</h4>
+                        <h4 id="form-heading" class="text-xs font-gamer font-bold text-m3-primary uppercase tracking-wide mb-4">Subscribe to a new Feed</h4>
                         
                         <form onsubmit="handleAddFeedSubmit(event)" class="space-y-4">
                             <div>
-                                <label for="feed-url-input" class="block text-xs font-semibold text-m3-onSurfaceVariant mb-1">Feed XML/RSS URL</label>
+                                <label for="feed-url-input" class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1">Feed XML/RSS URL</label>
                                 <input type="url" id="feed-url-input" required placeholder="https://www.androidpolice.com/feed/" class="w-full bg-m3-surfaceContainerHighest text-m3-onSurface px-4 py-2.5 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary text-sm">
                             </div>
                             <div>
-                                <label for="feed-name-input" class="block text-xs font-semibold text-m3-onSurfaceVariant mb-1">Display Name</label>
+                                <label for="feed-name-input" class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1">Display Name</label>
                                 <input type="text" id="feed-name-input" required placeholder="Android Police" class="w-full bg-m3-surfaceContainerHighest text-m3-onSurface px-4 py-2.5 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary text-sm">
                             </div>
                             <div>
-                                <label for="feed-icon-input" class="block text-xs font-semibold text-m3-onSurfaceVariant mb-1">Custom Icon / Emoji (Optional)</label>
-                                <input type="text" id="feed-icon-input" placeholder="🤖 or a small image URL" class="w-full bg-m3-surfaceContainerHighest text-m3-onSurface px-4 py-2.5 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary text-sm">
+                                <label for="feed-icon-input" class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1">Custom Icon / Emoji (Optional)</label>
+                                <input type="text" id="feed-icon-input" placeholder="🤖 or a custom image URL link" class="w-full bg-m3-surfaceContainerHighest text-m3-onSurface px-4 py-2.5 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary text-sm">
                             </div>
                             
                             <!-- Quick Presets -->
                             <div>
-                                <span class="block text-xs font-semibold text-m3-onSurfaceVariant/80 mb-1.5">Quick Presets</span>
+                                <span class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1.5">Quick Presets</span>
                                 <div class="flex flex-wrap gap-1.5">
                                     <button type="button" onclick="setPresetFeed('https://www.androidpolice.com/feed/', 'Android Police', '🤖')" class="px-2.5 py-1 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10">Android Police</button>
                                     <button type="button" onclick="setPresetFeed('https://9to5google.com/feed/', '9to5Google', '📱')" class="px-2.5 py-1 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10">9to5Google</button>
@@ -339,16 +353,21 @@
                                 </div>
                             </div>
                             
-                            <button type="submit" class="w-full py-2.5 bg-m3-primary text-m3-onPrimary text-sm font-semibold rounded-xl shadow-md hover:bg-m3-primary/95 transition-all flex items-center justify-center gap-1.5">
-                                <span class="material-symbols-outlined text-sm">add_circle</span>
-                                <span>Add Subscription</span>
-                            </button>
+                            <div class="flex gap-2">
+                                <button type="button" id="form-cancel-edit-btn" onclick="cancelEditMode()" class="hidden flex-grow py-2.5 border border-m3-outline text-m3-onSurface text-sm font-semibold rounded-xl">
+                                    Cancel
+                                </button>
+                                <button type="submit" id="form-submit-btn" class="flex-grow py-2.5 bg-m3-primary text-m3-onPrimary text-sm font-semibold rounded-xl shadow-md hover:bg-m3-primary/95 transition-all flex items-center justify-center gap-1.5">
+                                    <span class="material-symbols-outlined text-sm">add_circle</span>
+                                    <span id="form-submit-text">Add Subscription</span>
+                                </button>
+                            </div>
                         </form>
                     </div>
 
                     <!-- Sync/Backups Panel -->
                     <div class="bg-m3-surfaceContainerLow p-5 rounded-2xl border border-m3-outline/10 space-y-3">
-                        <h4 class="text-sm font-bold text-m3-primary uppercase tracking-wide">Backup & Portability</h4>
+                        <h4 class="text-xs font-gamer font-bold text-m3-primary uppercase tracking-wide">Backup & Portability</h4>
                         <p class="text-xs text-m3-onSurfaceVariant/80">Save and load your subscriptions and bookmarks instantly.</p>
                         
                         <div class="grid grid-cols-2 gap-3 pt-1">
@@ -363,23 +382,23 @@
                     </div>
                 </div>
 
-                <!-- Right Column: List & Delete -->
+                <!-- Right Column: List & Actions -->
                 <div class="flex flex-col h-full space-y-4">
-                    <h4 class="text-sm font-bold text-m3-primary uppercase tracking-wide">Manage Configured Subscriptions</h4>
+                    <h4 class="text-xs font-gamer font-bold text-m3-primary uppercase tracking-wide">Configure Channels</h4>
                     
                     <div class="flex-grow overflow-y-auto border border-m3-outline/10 rounded-2xl bg-m3-surfaceContainerLow p-3 space-y-2 min-h-[250px] max-h-[380px]" id="manage-feeds-list">
-                        <!-- dynamic subscription list with delete action -->
+                        <!-- dynamic subscription list with delete/edit actions -->
                     </div>
                 </div>
 
             </div>
 
             <!-- Footer options -->
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-4 border-t border-m3-outline/10">
-                <button onclick="restoreDefaults()" class="text-xs text-m3-error hover:underline flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">restart_alt</span> Reset to factory default list
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-4 border-t border-m3-outline/10 font-gamer">
+                <button onclick="restoreDefaults()" class="text-[10px] text-m3-error hover:underline flex items-center gap-1 font-bold">
+                    <span class="material-symbols-outlined text-sm">restart_alt</span> RESET CHANNELS
                 </button>
-                <button onclick="closeModal('manage-feeds-modal')" class="px-6 py-2 bg-m3-primary text-m3-onPrimary rounded-full text-sm font-semibold">Close</button>
+                <button onclick="closeModal('manage-feeds-modal')" class="px-6 py-2 bg-m3-primary text-m3-onPrimary rounded-full text-xs font-bold">CLOSE</button>
             </div>
 
         </div>
@@ -414,6 +433,7 @@
         let currentSort = 'newest';
         let searchQuery = '';
         let selectedProxy = 'rss2json';
+        let editingFeedId = null; // Track current feed id in Edit Mode
 
         window.addEventListener('DOMContentLoaded', () => {
             initStorageAndLoad();
@@ -614,7 +634,7 @@
                 }
             }
 
-            // 3. Deeper inline tag parsing (crucial for Android Police / Feedburner)
+            // 3. Deeper inline tag parsing (crucial for Android Police / Android Authority / Feedburner)
             if (!image) {
                 const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
                 const description = item.getElementsByTagName('description')[0]?.textContent || '';
@@ -688,7 +708,7 @@
             renderArticles();
         }
 
-        // Sampels dominant visual tone and generates a muted Material Dark Theme palette dynamically
+        // Samples dominant visual tone and generates a beautifully contrast-clamped Material Dark theme accent
         function tintCardFromImage(imgUrl, cardId) {
             const img = new Image();
             img.crossOrigin = "Anonymous";
@@ -712,21 +732,25 @@
                     g = Math.floor(g / count);
                     b = Math.floor(b / count);
                     
-                    // Mix with deep background (rgb: 29, 27, 32) for subtle responsive Material dark mode integration
+                    // Mix with background
                     const mix = 0.22; 
-                    const targetR = Math.floor(r * mix + 29 * (1 - mix));
-                    const targetG = Math.floor(g * mix + 27 * (1 - mix));
-                    const targetB = Math.floor(b * mix + 32 * (1 - mix));
+                    let targetR = Math.floor(r * mix + 29 * (1 - mix));
+                    let targetG = Math.floor(g * mix + 27 * (1 - mix));
+                    let targetB = Math.floor(b * mix + 32 * (1 - mix));
+                    
+                    // FIXED: Safeguard Floor Clamp (Prevents cards from becoming too dark & invisible)
+                    const minColorFloor = 45; // Clamp so target mixed values are never completely black
+                    if (targetR < minColorFloor) targetR = minColorFloor;
+                    if (targetG < minColorFloor) targetG = minColorFloor;
+                    if (targetB < minColorFloor) targetB = minColorFloor;
                     
                     const card = document.getElementById(cardId);
                     if (card) {
                         card.style.backgroundColor = `rgb(${targetR}, ${targetG}, ${targetB})`;
-                        card.style.borderColor = `rgba(${r}, ${g}, ${b}, 0.25)`;
+                        card.style.borderColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
                         card.style.boxShadow = `0 12px 24px rgba(${r}, ${g}, ${b}, 0.08)`;
                     }
-                } catch (e) {
-                    // Safe tainted canvas handler
-                }
+                } catch (e) {}
             };
             img.src = imgUrl;
         }
@@ -776,6 +800,9 @@
             container.innerHTML = filtered.map(art => {
                 const isBookmarked = bookmarkedArticles.some(b => b.link === art.link);
                 const uniqueCardId = `card-${art.id}`;
+                // Double escape title for safest script template rendering
+                const safeTitle = art.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                
                 return `
                     <article id="${uniqueCardId}" class="m3-interactive-card bg-m3-surfaceContainer rounded-[24px] border border-m3-outline/10 p-5 flex flex-col justify-between h-full group overflow-hidden">
                         <div>
@@ -786,11 +813,17 @@
                                 </span>
                                 <span class="text-xs text-m3-onSurfaceVariant/60">${new Date(art.pubDate).toLocaleDateString()}</span>
                             </div>
+                            
+                            <!-- FIXED: Fallback handling to ensure preview images NEVER show broken links -->
                             ${art.image ? `
                                 <div class="w-full h-36 rounded-xl overflow-hidden mb-4 bg-m3-surfaceContainerLow">
-                                    <img src="${art.image}" alt="Preview" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onload="tintCardFromImage('${art.image}', '${uniqueCardId}')">
+                                    <img src="${art.image}" alt="${safeTitle}" 
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                                         onerror="this.onerror=null; this.src=getRandomImageFallback('${safeTitle}');" 
+                                         onload="tintCardFromImage(this.src, '${uniqueCardId}')">
                                 </div>
                             ` : ''}
+                            
                             <h3 class="text-base font-bold text-m3-onSurface leading-snug mb-2 group-hover:text-m3-primary transition-colors">
                                 <a href="${art.link}" target="_blank" rel="noopener noreferrer">${art.title}</a>
                             </h3>
@@ -837,23 +870,56 @@
             document.getElementById('feed-icon-input').value = icon || ''; 
         }
         
+        // Handle edit action and populate values back into input forms
+        function startEditFeed(feedId) {
+            const feed = subscriptions.find(f => f.id === feedId);
+            if (!feed) return;
+            
+            editingFeedId = feedId;
+            document.getElementById('feed-url-input').value = feed.url;
+            document.getElementById('feed-name-input').value = feed.name;
+            document.getElementById('feed-icon-input').value = feed.icon || '';
+            
+            // Adjust visual state of the form
+            document.getElementById('form-heading').textContent = "Edit Configured Feed";
+            document.getElementById('form-submit-text').textContent = "Save Changes";
+            document.getElementById('form-cancel-edit-btn').classList.remove('hidden');
+        }
+
+        function cancelEditMode() {
+            editingFeedId = null;
+            document.getElementById('feed-url-input').value = '';
+            document.getElementById('feed-name-input').value = '';
+            document.getElementById('feed-icon-input').value = '';
+            
+            document.getElementById('form-heading').textContent = "Subscribe to a new Feed";
+            document.getElementById('form-submit-text').textContent = "Add Subscription";
+            document.getElementById('form-cancel-edit-btn').classList.add('hidden');
+        }
+
         function handleAddFeedSubmit(e) {
             e.preventDefault();
             const url = document.getElementById('feed-url-input').value.trim();
             const name = document.getElementById('feed-name-input').value.trim() || 'Custom Feed';
             const icon = document.getElementById('feed-icon-input').value.trim() || '📰';
-            const newId = `feed-${Date.now()}`;
             
-            subscriptions.push({ id: newId, name, url, icon });
+            if (editingFeedId) {
+                // Edit existing subscription
+                const idx = subscriptions.findIndex(f => f.id === editingFeedId);
+                if (idx > -1) {
+                    subscriptions[idx].url = url;
+                    subscriptions[idx].name = name;
+                    subscriptions[idx].icon = icon;
+                }
+                cancelEditMode();
+            } else {
+                // Add brand new subscription
+                const newId = `feed-${Date.now()}`;
+                subscriptions.push({ id: newId, name, url, icon });
+            }
+            
             saveSubscriptions();
-            
-            // Clean fields
-            document.getElementById('feed-url-input').value = '';
-            document.getElementById('feed-name-input').value = '';
-            document.getElementById('feed-icon-input').value = '';
-
             renderManageFeedsList();
-            filterBySource(newId);
             fetchAllFeedArticles();
         }
 
@@ -864,7 +930,7 @@
                 return; 
             }
             container.innerHTML = subscriptions.map(f => `
-                <div class="flex items-center justify-between p-3 rounded-xl bg-m3-surfaceContainerHighest/70 border border-m3-outline/10 text-xs gap-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl bg-m3-surfaceContainerHighest/70 border border-m3-outline/10 text-xs gap-4">
                     <div class="truncate max-w-sm flex items-center gap-2">
                         <div class="w-8 h-8 rounded-full bg-m3-primaryContainer text-m3-onPrimaryContainer flex items-center justify-center">
                             ${renderFeedIcon(f.icon, "text-sm")}
@@ -874,7 +940,10 @@
                             <div class="opacity-70 truncate max-w-[180px] sm:max-w-xs">${f.url}</div>
                         </div>
                     </div>
-                    <button onclick="removeFeed('${f.id}')" class="px-3 py-1.5 rounded-lg bg-m3-error/10 text-m3-error hover:bg-m3-error/20 font-bold">Delete</button>
+                    <div class="flex gap-2 self-end sm:self-center">
+                        <button onclick="startEditFeed('${f.id}')" class="px-3 py-1.5 rounded-lg bg-m3-primary/10 text-m3-primary hover:bg-m3-primary/20 font-bold">Edit</button>
+                        <button onclick="confirmRemoveFeed('${f.id}')" class="px-3 py-1.5 rounded-lg bg-m3-error/10 text-m3-error hover:bg-m3-error/20 font-bold">Delete</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -970,7 +1039,13 @@
         }
 
         function hashCode(s) { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return Math.abs(h); }
-        function getRandomImageFallback(t) { return `https://images.unsplash.com/photo-${['1618005182384-a83a8bd57fbe','1579546929518-9e396f3cc809','1550751827-4bd374c3f58b','1526374965328-7f61d4dc18c5'][hashCode(t)%4]}?auto=format&fit=crop&w=500&q=80`; }
+        
+        function getRandomImageFallback(title) { 
+            // Return visual patterns
+            const imageIds = ['1618005182384-a83a8bd57fbe','1579546929518-9e396f3cc809','1550751827-4bd374c3f58b','1526374965328-7f61d4dc18c5'];
+            const id = imageIds[hashCode(title) % imageIds.length];
+            return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=500&q=80`; 
+        }
 
         let dialogConfirmCallback = null;
         function showCustomDialog(title, msg, onConfirm) {
