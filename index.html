@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chronicle // Expressive RSS Reader</title>
+    <title>Chronicle</title>
+    <!-- Dynamic Purple RSS Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23D0BCFF'%3E%3Ccircle cx='6.18' cy='17.82' r='2.18'/%3E%3Cpath d='M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z'/%3E%3C/svg%3E">
     <!-- Import Google Sans Flex, Inter, Orbitron (Gamer Font), and Material Symbols -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -267,7 +269,7 @@
                         <span class="flex-grow">Bookmarks</span>
                         <span id="bookmark-count" class="text-xs bg-m3-outlineVariant text-m3-onSurfaceVariant px-2 py-0.5 rounded-full">0</span>
                     </button>
-                    <!-- INTEGRATED SETTINGS NAVIGATION BUTTON (Added here!) -->
+                    <!-- INTEGRATED SETTINGS NAVIGATION BUTTON -->
                     <button onclick="toggleSettingsView()" id="filter-settings-btn" class="flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1">
                         <span class="material-symbols-outlined">settings</span>
                         <span class="flex-grow">Settings</span>
@@ -490,6 +492,7 @@
             document.getElementById('bookmark-count').textContent = bookmarkedArticles.length;
         }
 
+        // Filter router
         function filterBySource(sourceId) {
             unreadFilterActive = false;
             activeFilter = sourceId;
@@ -523,7 +526,7 @@
             renderArticles();
         }
 
-        // FIXED: Settings navigation routing just like bookmarks
+        // Settings navigation routing
         function toggleSettingsView() {
             unreadFilterActive = false;
             activeFilter = 'settings';
@@ -835,12 +838,13 @@
             }).join('');
         }
 
-        // FIXED: Generates a beautiful Settings view page directly inside the articles column area
+        // FIXED: Generates a beautiful Settings view page directly inside the articles column area with Orbitron ONLY on the top heading
         function renderSettingsPage(container) {
             container.className = "flex flex-col gap-6 w-full max-w-3xl mx-auto";
             container.innerHTML = `
-                <div class="bg-m3-surfaceContainer rounded-[28px] border border-m3-outline/10 p-6 md:p-8 flex flex-col gap-6">
+                <div class="bg-m3-surfaceContainer rounded-[28px] border border-m3-outline/10 p-6 md:p-8 flex flex-col gap-6 font-sans">
                     <div>
+                        <!-- Keep Orbitron gamer font ONLY on the main title below -->
                         <h2 class="text-xl md:text-2xl font-gamer font-bold text-m3-primary tracking-wide mb-2 flex items-center gap-3">
                             <span class="material-symbols-outlined text-2xl">settings</span>
                             <span>READER SETTINGS</span>
@@ -850,10 +854,10 @@
 
                     <hr class="border-m3-outline/10">
 
-                    <!-- CORS proxy section -->
+                    <!-- CORS proxy section (Uses clean font-sans) -->
                     <div class="space-y-3">
-                        <label for="settings-proxy-selector" class="block text-xs font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide">CORS Proxy Mode</label>
-                        <select id="settings-proxy-selector" onchange="updateProxySettingFromPage()" class="bg-m3-surfaceContainerHighest text-m3-onSurface rounded-xl p-3.5 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer w-full text-sm">
+                        <label for="settings-proxy-selector" class="block text-xs font-bold text-m3-onSurfaceVariant uppercase tracking-wide">CORS Proxy Mode</label>
+                        <select id="settings-proxy-selector" onchange="updateProxySettingFromPage()" class="bg-m3-surfaceContainerHighest text-m3-onSurface rounded-xl p-3.5 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer w-full text-sm font-sans">
                             <option value="rss2json" ${selectedProxy === 'rss2json' ? 'selected' : ''}>RSS-to-JSON API (Recommended - Highly Stable)</option>
                             <option value="corsproxy" ${selectedProxy === 'corsproxy' ? 'selected' : ''}>Corsproxy.io (Standard)</option>
                             <option value="allorigins" ${selectedProxy === 'allorigins' ? 'selected' : ''}>AllOrigins API (Alternative)</option>
@@ -865,16 +869,16 @@
 
                     <hr class="border-m3-outline/10">
 
-                    <!-- Export/Import backup options -->
+                    <!-- Export/Import backup options (Uses clean font-sans) -->
                     <div class="space-y-4">
-                        <h4 class="text-xs font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide">Backup & Portability Schema</h4>
+                        <h4 class="text-xs font-bold text-m3-onSurfaceVariant uppercase tracking-wide">Backup & Portability Schema</h4>
                         <p class="text-xs text-m3-onSurfaceVariant/80">Your custom channels and bookmarked articles are saved to your browser's LocalStorage. You can export them to a file for backup or migrating to another browser.</p>
                         
                         <div class="flex flex-wrap gap-3">
-                            <button onclick="exportData()" class="m3-btn px-6 py-2.5 bg-m3-secondaryContainer text-m3-onSecondaryContainer text-xs font-bold font-gamer rounded-full flex items-center justify-center gap-1.5 hover:opacity-90">
+                            <button onclick="exportData()" class="m3-btn px-6 py-2.5 bg-m3-secondaryContainer text-m3-onSecondaryContainer text-xs font-bold rounded-full flex items-center justify-center gap-1.5 hover:opacity-90 font-sans">
                                 <span class="material-symbols-outlined text-base">download</span> EXPORT SCHEMA
                             </button>
-                            <button onclick="triggerImport()" class="m3-btn px-6 py-2.5 border border-m3-outline text-m3-onSurface text-xs font-bold font-gamer rounded-full flex items-center justify-center gap-1.5 hover:bg-m3-surfaceVariant/30">
+                            <button onclick="triggerImport()" class="m3-btn px-6 py-2.5 border border-m3-outline text-m3-onSurface text-xs font-bold rounded-full flex items-center justify-center gap-1.5 hover:bg-m3-surfaceVariant/30 font-sans">
                                 <span class="material-symbols-outlined text-base">upload</span> IMPORT SCHEMA
                             </button>
                             <input type="file" id="settings-import-file-input" onchange="handleImportFile(event)" accept=".json" class="hidden">
@@ -883,12 +887,12 @@
 
                     <hr class="border-m3-outline/10">
 
-                    <!-- System reset block -->
+                    <!-- System reset block (Uses clean font-sans) -->
                     <div class="space-y-4">
-                        <h4 class="text-xs font-gamer font-bold text-m3-error uppercase tracking-wide">Danger Zone</h4>
+                        <h4 class="text-xs font-bold text-m3-error uppercase tracking-wide">Danger Zone</h4>
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-m3-errorContainer/10 border border-m3-error/20">
                             <p class="text-xs text-m3-onSurfaceVariant/80 max-w-md">Completely wipe all stored channels, feed modifications, custom icons, and bookmarked articles, and reset to defaults.</p>
-                            <button onclick="restoreDefaults()" class="m3-btn px-5 py-2.5 bg-m3-error/20 text-m3-error hover:bg-m3-error/30 font-bold font-gamer text-xs rounded-xl flex items-center gap-1.5 self-end sm:self-center">
+                            <button onclick="restoreDefaults()" class="m3-btn px-5 py-2.5 bg-m3-error/20 text-m3-error hover:bg-m3-error/30 font-bold text-xs rounded-xl flex items-center gap-1.5 self-end sm:self-center font-sans">
                                 <span class="material-symbols-outlined text-sm">restart_alt</span> FACTORY RESET
                             </button>
                         </div>
@@ -996,7 +1000,7 @@
                             <div class="opacity-70 truncate max-w-[180px] sm:max-w-xs">${f.url}</div>
                         </div>
                     </div>
-                    <div class="flex gap-2 self-end sm:self-center">
+                    <div class="flex gap-2 self-end sm:self-center font-sans">
                         <button onclick="startEditFeed('${f.id}')" class="px-3 py-1.5 rounded-lg bg-m3-primary/10 text-m3-primary hover:bg-m3-primary/20 font-bold">Edit</button>
                         <button onclick="confirmRemoveFeed('${f.id}')" class="px-3 py-1.5 rounded-lg bg-m3-error/10 text-m3-error hover:bg-m3-error/20 font-bold">Delete</button>
                     </div>
@@ -1088,6 +1092,7 @@
         }
 
         function showLoadingSkeleton() {
+            document.getElementById('articles-container').className = "grid grid-cols-1 md:grid-cols-2 gap-4";
             document.getElementById('articles-container').innerHTML = `
                 <div class="shimmer-card h-48 bg-m3-surfaceContainer rounded-3xl p-5"><div class="shimmer-bg h-4 w-1/4 rounded mb-2"></div><div class="shimmer-bg h-6 w-3/4 rounded"></div></div>
                 <div class="shimmer-card h-48 bg-m3-surfaceContainer rounded-3xl p-5"><div class="shimmer-bg h-4 w-1/3 rounded mb-2"></div><div class="shimmer-bg h-6 w-2/3 rounded"></div></div>
