@@ -407,12 +407,11 @@
         let currentSort = 'newest';
         let searchQuery = '';
         let selectedProxy = 'rss2json';
-        let editingFeedId = null; // Track current feed id in Edit Mode
+        let editingFeedId = null; 
 
         // Register the Service Worker relative to current base path to handle GitHub Pages subfolders
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Find correct root path on GitHub Pages
                 const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
                 navigator.serviceWorker.register(`${basePath}sw.js`)
                     .then((reg) => console.log('Service Worker registered successfully!', reg.scope))
@@ -449,13 +448,12 @@
                     icon.textContent = "cloud_off";
                     text.textContent = "Offline Mode";
                     if (refreshBtn) refreshBtn.disabled = true;
-                    // Optional: gracefully block adding feeds in offline mode
                 }
             }
 
             window.addEventListener('online', () => {
                 updateOnlineStatus();
-                fetchAllFeedArticles(); // Refresh feed automatically once connection is restored
+                fetchAllFeedArticles(); 
             });
             window.addEventListener('offline', updateOnlineStatus);
             updateOnlineStatus();
@@ -493,7 +491,6 @@
                 }
             }
 
-            // Load last active fetched articles cache if user is completely offline on load
             if (cachedArticlesRaw) {
                 try {
                     allArticles = JSON.parse(cachedArticlesRaw);
@@ -561,12 +558,10 @@
             document.getElementById('bookmark-count').textContent = bookmarkedArticles.length;
         }
 
-        // Filter router
         function filterBySource(sourceId) {
             unreadFilterActive = false;
             activeFilter = sourceId;
             
-            // Adjust search bar visibility
             document.getElementById('feed-controls-bar').classList.remove('hidden');
 
             document.getElementById('filter-all-btn').className = sourceId === 'all' 
@@ -595,12 +590,10 @@
             renderArticles();
         }
 
-        // Settings navigation routing
         function toggleSettingsView() {
             unreadFilterActive = false;
             activeFilter = 'settings';
 
-            // Hide the controls bar to keep settings screen completely clean
             document.getElementById('feed-controls-bar').classList.add('hidden');
 
             document.getElementById('filter-all-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150";
@@ -611,7 +604,6 @@
             renderArticles();
         }
 
-        // Sequential Fetch Engine trying RSS2JSON and CORS fallbacks
         async function fetchFeed(feedUrl) {
             const chain = [];
             if (selectedProxy === 'none') {
@@ -663,48 +655,74 @@
             throw new Error("All proxy chains failed.");
         }
 
-        // Clean & Extract images reliably from diverse sources
+        // Extremely robust extraction method to bypass 1x1 feedburner tracking pixels that cause blank gaps
         function extractArticleImage(item, isXml = true) {
+            const isBadImage = (url) => {
+                if (!url) return true;
+                url = url.toLowerCase();
+                if (url.includes('feedburner.com/~r/')) return true;
+                if (url.includes('tracking')) return true;
+                if (url.includes('shareicons')) return true;
+                if (url.includes('api.tweetmeme.com')) return true;
+                if (url.includes('statcounter.com')) return true;
+                if (url.includes('feedsportal.com')) return true;
+                return false;
+            };
+
+            const extractFromHtml = (htmlStr) => {
+                if (!htmlStr) return '';
+                const matchAll = htmlStr.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
+                for (const match of matchAll) {
+                    const fullTag = match[0].toLowerCase();
+                    const src = match[1];
+                    // Skip 1x1 or visually hidden invisible pixels
+                    if (fullTag.includes('width="1"') || fullTag.includes('height="1"')) continue;
+                    if (isBadImage(src)) continue;
+                    return src;
+                }
+                return '';
+            };
+
             if (!isXml) {
                 let image = item.thumbnail || '';
                 if (!image && item.enclosure && item.enclosure.link && item.enclosure.type && item.enclosure.type.startsWith('image')) {
                     image = item.enclosure.link;
                 }
-                if (!image && item.description) {
-                    const imgMatch = item.description.match(/<img[^>]+src="([^">]+)"/i);
-                    if (imgMatch) image = imgMatch[1];
-                }
+                if (isBadImage(image)) image = '';
+
+                if (!image && item.description) image = extractFromHtml(item.description);
+                if (!image && item.content) image = extractFromHtml(item.content);
                 return image;
             }
 
             let image = '';
-            const mediaContent = item.getElementsByTagName('media:content')[0] || item.getElementsByTagName('media:thumbnail')[0];
-            if (mediaContent && mediaContent.getAttribute('url')) {
-                image = mediaContent.getAttribute('url');
+            const mediaContentList = [...item.getElementsByTagName('media:content'), ...item.getElementsByTagName('media:thumbnail')];
+            for (const media of mediaContentList) {
+                const url = media.getAttribute('url');
+                if (url && !isBadImage(url)) {
+                    image = url;
+                    break;
+                }
             }
 
             if (!image) {
                 const enclosure = item.getElementsByTagName('enclosure')[0];
                 if (enclosure && enclosure.getAttribute('type')?.startsWith('image')) {
-                    image = enclosure.getAttribute('url');
+                    const url = enclosure.getAttribute('url');
+                    if (url && !isBadImage(url)) image = url;
                 }
             }
 
             if (!image) {
                 const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
                 const description = item.getElementsByTagName('description')[0]?.textContent || '';
-                const combinedHtml = contentEncoded + description;
-                const imgMatch = combinedHtml.match(/<img[^>]+src="([^">]+)"/i);
-                if (imgMatch) {
-                    image = imgMatch[1];
-                }
+                image = extractFromHtml(contentEncoded + description);
             }
 
             return image;
         }
 
         async function fetchAllFeedArticles() {
-            // If offline, bypass network call completely and immediately show cached elements
             if (!navigator.onLine) {
                 renderArticles();
                 return;
@@ -766,55 +784,77 @@
 
             const results = await Promise.all(promises);
             allArticles = results.flat();
-            saveArticlesCache(); // Save to local storage cache so articles load when offline
+            saveArticlesCache(); 
             renderArticles();
         }
 
-        // Samples dominant visual tone and generates a beautifully contrast-clamped Material Dark theme accent
-        function tintCardFromImage(imgUrl, cardId) {
-            const img = new Image();
-            img.crossOrigin = "Anonymous";
-            img.onload = function() {
-                try {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 10;
-                    canvas.height = 10;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, 10, 10);
-                    const data = ctx.getImageData(0, 0, 10, 10).data;
-                    
-                    let r = 0, g = 0, b = 0, count = 0;
-                    for (let i = 0; i < data.length; i += 4) {
-                        r += data[i];
-                        g += data[i+1];
-                        b += data[i+2];
-                        count++;
-                    }
-                    r = Math.floor(r / count);
-                    g = Math.floor(g / count);
-                    b = Math.floor(b / count);
-                    
-                    // Mix with background
-                    const mix = 0.22; 
-                    let targetR = Math.floor(r * mix + 29 * (1 - mix));
-                    let targetG = Math.floor(g * mix + 27 * (1 - mix));
-                    let targetB = Math.floor(b * mix + 32 * (1 - mix));
-                    
-                    // Safeguard Floor Clamp
-                    const minColorFloor = 45; 
-                    if (targetR < minColorFloor) targetR = minColorFloor;
-                    if (targetG < minColorFloor) targetG = minColorFloor;
-                    if (targetB < minColorFloor) targetB = minColorFloor;
-                    
-                    const card = document.getElementById(cardId);
-                    if (card) {
-                        card.style.backgroundColor = `rgb(${targetR}, ${targetG}, ${targetB})`;
-                        card.style.borderColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
-                        card.style.boxShadow = `0 12px 24px rgba(${r}, ${g}, ${b}, 0.08)`;
-                    }
-                } catch (e) {}
-            };
-            img.src = imgUrl;
+        // Helper to convert URLs through a powerful image cache to fix hotlink/CORS breakage
+        function getProxiedImageUrl(url) {
+            if (!url) return '';
+            if (url.startsWith('data:') || url.includes('wsrv.nl')) return url;
+            return `https://wsrv.nl/?url=${encodeURIComponent(url)}&output=webp`;
+        }
+
+        // Super robust error handler that will gracefully fallback and perfectly hide wrappers that break
+        function handleImageError(img, originalSrc) {
+            if (img.src !== originalSrc && !img.dataset.fallbackTried) {
+                // If proxy fails, try the raw URL once before giving up
+                img.dataset.fallbackTried = "true";
+                img.removeAttribute('crossorigin');
+                img.src = originalSrc;
+            } else {
+                // Completely remove the image container so the card neatly collapses to text-only mode
+                if (img.parentElement && img.parentElement.classList.contains('image-container-wrapper')) {
+                    img.parentElement.style.display = 'none';
+                }
+            }
+        }
+
+        // Tints card dynamically via image sampling
+        function tintCardFromImage(imgElement, cardId) {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 10;
+                canvas.height = 10;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(imgElement, 0, 0, 10, 10);
+                const data = ctx.getImageData(0, 0, 10, 10).data;
+                
+                let r = 0, g = 0, b = 0, count = 0;
+                for (let i = 0; i < data.length; i += 4) {
+                    // Ignore completely transparent pixels
+                    if (data[i+3] < 128) continue;
+                    r += data[i];
+                    g += data[i+1];
+                    b += data[i+2];
+                    count++;
+                }
+                
+                if (count === 0) return;
+
+                r = Math.floor(r / count);
+                g = Math.floor(g / count);
+                b = Math.floor(b / count);
+                
+                const mix = 0.22; 
+                let targetR = Math.floor(r * mix + 29 * (1 - mix));
+                let targetG = Math.floor(g * mix + 27 * (1 - mix));
+                let targetB = Math.floor(b * mix + 32 * (1 - mix));
+                
+                const minColorFloor = 45; 
+                if (targetR < minColorFloor) targetR = minColorFloor;
+                if (targetG < minColorFloor) targetG = minColorFloor;
+                if (targetB < minColorFloor) targetB = minColorFloor;
+                
+                const card = document.getElementById(cardId);
+                if (card) {
+                    card.style.backgroundColor = `rgb(${targetR}, ${targetG}, ${targetB})`;
+                    card.style.borderColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
+                    card.style.boxShadow = `0 12px 24px rgba(${r}, ${g}, ${b}, 0.08)`;
+                }
+            } catch (e) {
+                // Soft fail if CORS blocks the canvas read
+            }
         }
 
         function renderArticles() {
@@ -822,7 +862,6 @@
             const emptyState = document.getElementById('empty-state');
             const activeHeader = document.getElementById('active-feed-header');
             
-            // Handle active view settings routing
             if (activeFilter === 'settings') {
                 activeHeader.classList.add('hidden');
                 emptyState.classList.add('hidden');
@@ -868,7 +907,6 @@
             }
             emptyState.classList.add('hidden');
 
-            // Apply responsive grid layout for article cards
             container.className = "grid grid-cols-1 md:grid-cols-2 gap-4";
 
             container.innerHTML = filtered.map(art => {
@@ -889,10 +927,11 @@
                             
                             ${art.image ? `
                                 <div class="image-container-wrapper w-full h-36 rounded-xl overflow-hidden mb-4 bg-m3-surfaceContainerLow">
-                                    <img src="${art.image}" alt="${safeTitle}" 
+                                    <img src="${getProxiedImageUrl(art.image)}" alt="${safeTitle}" 
+                                         crossorigin="anonymous"
                                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                                         onerror="this.closest('.image-container-wrapper').remove();" 
-                                         onload="tintCardFromImage(this.src, '${uniqueCardId}')">
+                                         onerror="handleImageError(this, '${art.image}')" 
+                                         onload="tintCardFromImage(this, '${uniqueCardId}')">
                                 </div>
                             ` : ''}
                             
@@ -914,7 +953,6 @@
             }).join('');
         }
 
-        // Generates settings view with Orbitron only on main heading
         function renderSettingsPage(container) {
             container.className = "flex flex-col gap-6 w-full max-w-3xl mx-auto";
             container.innerHTML = `
@@ -929,7 +967,6 @@
 
                     <hr class="border-m3-outline/10">
 
-                    <!-- CORS proxy section -->
                     <div class="space-y-3">
                         <label for="settings-proxy-selector" class="block text-xs font-bold text-m3-onSurfaceVariant uppercase tracking-wide">CORS Proxy Mode</label>
                         <select id="settings-proxy-selector" onchange="updateProxySettingFromPage()" class="bg-m3-surfaceContainerHighest text-m3-onSurface rounded-xl p-3.5 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer w-full text-sm font-sans">
@@ -944,7 +981,6 @@
 
                     <hr class="border-m3-outline/10">
 
-                    <!-- Export/Import backup options -->
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold text-m3-onSurfaceVariant uppercase tracking-wide">Backup & Portability Schema</h4>
                         <p class="text-xs text-m3-onSurfaceVariant/80">Your custom channels and bookmarked articles are saved to your browser's LocalStorage. You can export them to a file for backup or migrating to another browser.</p>
@@ -962,7 +998,6 @@
 
                     <hr class="border-m3-outline/10">
 
-                    <!-- System reset block -->
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold text-m3-error uppercase tracking-wide">Danger Zone</h4>
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-m3-errorContainer/10 border border-m3-error/20">
@@ -972,7 +1007,6 @@
                             </button>
                         </div>
                     </div>
-
                 </div>
             `;
         }
@@ -1005,7 +1039,6 @@
             document.getElementById('feed-icon-input').value = icon || ''; 
         }
         
-        // Handle edit action and populate values back into input forms
         function startEditFeed(feedId) {
             const feed = subscriptions.find(f => f.id === feedId);
             if (!feed) return;
@@ -1015,7 +1048,6 @@
             document.getElementById('feed-name-input').value = feed.name;
             document.getElementById('feed-icon-input').value = feed.icon || '';
             
-            // Adjust visual state of the form
             document.getElementById('form-heading').textContent = "Edit Configured Feed";
             document.getElementById('form-submit-text').textContent = "Save Changes";
             document.getElementById('form-cancel-edit-btn').classList.remove('hidden');
@@ -1039,7 +1071,6 @@
             const icon = document.getElementById('feed-icon-input').value.trim() || '📰';
             
             if (editingFeedId) {
-                // Edit existing subscription
                 const idx = subscriptions.findIndex(f => f.id === editingFeedId);
                 if (idx > -1) {
                     subscriptions[idx].url = url;
@@ -1048,7 +1079,6 @@
                 }
                 cancelEditMode();
             } else {
-                // Add brand new subscription
                 const newId = `feed-${Date.now()}`;
                 subscriptions.push({ id: newId, name, url, icon });
             }
@@ -1115,7 +1145,6 @@
             }
         }
 
-        // Import & Export Backup implementation
         function exportData() {
             try {
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
@@ -1133,7 +1162,6 @@
             }
         }
 
-        // Trigger file import securely
         function triggerImport() {
             const fileInput = document.getElementById('settings-import-file-input');
             if (fileInput) {
@@ -1182,12 +1210,6 @@
         }
 
         function hashCode(s) { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return Math.abs(h); }
-        
-        function getRandomImageFallback(title) { 
-            const imageIds = ['1618005182384-a83a8bd57fbe','1579546929518-9e396f3cc809','1550751827-4bd374c3f58b','1526374965328-7f61d4dc18c5'];
-            const id = imageIds[hashCode(title) % imageIds.length];
-            return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=500&q=80`; 
-        }
 
         let dialogConfirmCallback = null;
         function showCustomDialog(title, msg, onConfirm) {
