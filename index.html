@@ -148,7 +148,7 @@
 </head>
 <body class="min-h-screen flex flex-col antialiased">
 
-    <!-- TOP APP BAR (Simplified) -->
+    <!-- TOP APP BAR -->
     <header class="sticky top-0 z-50 bg-m3-background/90 backdrop-blur-md border-b border-m3-outline/10 px-4 md:px-8 py-3.5 flex items-center justify-between">
         <div class="flex items-center gap-3">
             <span class="material-symbols-outlined text-3xl text-m3-primary font-bold">rss_feed</span>
@@ -174,8 +174,8 @@
         <!-- MAIN FEED ARTICLE FEED (Prioritized on Top for mobile layout) -->
         <section class="order-1 lg:order-2 lg:col-span-3 flex flex-col gap-6">
             
-            <!-- CONTROLS & SEARCH BAR -->
-            <div class="bg-m3-surfaceContainerHigh rounded-3xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border border-m3-outline/10">
+            <!-- CONTROLS & SEARCH BAR (Hidden dynamically in settings view) -->
+            <div id="feed-controls-bar" class="bg-m3-surfaceContainerHigh rounded-3xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border border-m3-outline/10">
                 <div class="relative flex-grow">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-m3-onSurfaceVariant/60">search</span>
                     <input type="text" id="article-search" oninput="searchArticles()" placeholder="Search articles by title, content or feed name..." class="w-full bg-m3-surfaceContainerLowest text-m3-onSurface pl-12 pr-4 py-3 rounded-2xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary placeholder-m3-onSurfaceVariant/50 text-sm transition-all">
@@ -206,7 +206,7 @@
                 </div>
             </div>
 
-            <!-- FEED ENTRIES GRID CONTAINER -->
+            <!-- FEED ENTRIES GRID CONTAINER & SETTINGS PANEL -->
             <div id="articles-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Skeletons render on load -->
                 <div class="shimmer-card h-64 bg-m3-surfaceContainer rounded-3xl border border-m3-outline/10 p-5 flex flex-col justify-between">
@@ -241,7 +241,7 @@
 
         </section>
 
-        <!-- SIDEBAR: FEEDS LIST & INTEGRATED SETTINGS -->
+        <!-- SIDEBAR: FEEDS LIST & SYSTEM ACTIONS -->
         <aside class="order-2 lg:order-1 lg:col-span-1 flex flex-col gap-4">
             
             <!-- YOUR SUBSCRIPTIONS PANEL -->
@@ -267,29 +267,12 @@
                         <span class="flex-grow">Bookmarks</span>
                         <span id="bookmark-count" class="text-xs bg-m3-outlineVariant text-m3-onSurfaceVariant px-2 py-0.5 rounded-full">0</span>
                     </button>
+                    <!-- INTEGRATED SETTINGS NAVIGATION BUTTON (Added here!) -->
+                    <button onclick="toggleSettingsView()" id="filter-settings-btn" class="flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1">
+                        <span class="material-symbols-outlined">settings</span>
+                        <span class="flex-grow">Settings</span>
+                    </button>
                 </div>
-            </div>
-
-            <!-- INTEGRATED SIDEBAR SETTINGS (Moved here!) -->
-            <div class="bg-m3-surfaceContainerLow rounded-3xl p-5 border border-m3-outline/10 flex flex-col gap-4">
-                <div class="flex items-center gap-2 text-m3-primary font-gamer font-bold text-xs tracking-wider">
-                    <span class="material-symbols-outlined text-sm">tune</span>
-                    <span>READER SETTINGS</span>
-                </div>
-                
-                <div class="space-y-3">
-                    <div>
-                        <label for="proxy-selector" class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant/80 uppercase tracking-wide mb-1.5">CORS Proxy Mode</label>
-                        <select id="proxy-selector" onchange="updateProxySetting()" class="bg-m3-surfaceContainerHighest text-m3-onSurface rounded-xl p-2.5 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer w-full text-xs">
-                            <option value="rss2json">RSS-to-JSON API (Recommended)</option>
-                            <option value="corsproxy">Corsproxy.io (Standard)</option>
-                            <option value="allorigins">AllOrigins API (Standard)</option>
-                            <option value="codetabs">Codetabs Proxy (Alternative)</option>
-                            <option value="none">Direct Request (No proxy)</option>
-                        </select>
-                    </div>
-                </div>
-                <p class="text-[10px] text-m3-onSurfaceVariant/60 leading-relaxed">Browsers block fetching XML directly from different domains. Choose an active proxy if feeds fail to fetch.</p>
             </div>
 
         </aside>
@@ -364,22 +347,6 @@
                             </div>
                         </form>
                     </div>
-
-                    <!-- Sync/Backups Panel -->
-                    <div class="bg-m3-surfaceContainerLow p-5 rounded-2xl border border-m3-outline/10 space-y-3">
-                        <h4 class="text-xs font-gamer font-bold text-m3-primary uppercase tracking-wide">Backup & Portability</h4>
-                        <p class="text-xs text-m3-onSurfaceVariant/80">Save and load your subscriptions and bookmarks instantly.</p>
-                        
-                        <div class="grid grid-cols-2 gap-3 pt-1">
-                            <button onclick="exportData()" class="px-4 py-2 bg-m3-secondaryContainer text-m3-onSecondaryContainer text-xs font-bold rounded-xl flex items-center justify-center gap-1 hover:opacity-90">
-                                <span class="material-symbols-outlined text-sm">download</span> Export
-                            </button>
-                            <button onclick="triggerImport()" class="px-4 py-2 border border-m3-outline text-m3-onSurface text-xs font-bold rounded-xl flex items-center justify-center gap-1 hover:bg-m3-surfaceVariant/30">
-                                <span class="material-symbols-outlined text-sm">upload</span> Import
-                            </button>
-                            <input type="file" id="import-file-input" onchange="handleImportFile(event)" accept=".json" class="hidden">
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Right Column: List & Actions -->
@@ -395,9 +362,6 @@
 
             <!-- Footer options -->
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-4 border-t border-m3-outline/10 font-gamer">
-                <button onclick="restoreDefaults()" class="text-[10px] text-m3-error hover:underline flex items-center gap-1 font-bold">
-                    <span class="material-symbols-outlined text-sm">restart_alt</span> RESET CHANNELS
-                </button>
                 <button onclick="closeModal('manage-feeds-modal')" class="px-6 py-2 bg-m3-primary text-m3-onPrimary rounded-full text-xs font-bold">CLOSE</button>
             </div>
 
@@ -448,7 +412,8 @@
 
             if (savedProxy) {
                 selectedProxy = savedProxy;
-                document.getElementById('proxy-selector').value = selectedProxy;
+            } else {
+                selectedProxy = 'rss2json';
             }
 
             if (savedFeedsRaw) {
@@ -505,7 +470,7 @@
             }
 
             container.innerHTML = subscriptions.map(feed => {
-                const isActive = activeFilter === feed.id && !unreadFilterActive;
+                const isActive = activeFilter === feed.id && !unreadFilterActive && activeFilter !== 'settings';
                 const activeClasses = isActive 
                     ? 'bg-m3-secondaryContainer text-m3-onSecondaryContainer font-semibold' 
                     : 'text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 hover:text-m3-onSurface';
@@ -529,11 +494,16 @@
             unreadFilterActive = false;
             activeFilter = sourceId;
             
+            // Adjust search bar visibility
+            document.getElementById('feed-controls-bar').classList.remove('hidden');
+
             document.getElementById('filter-all-btn').className = sourceId === 'all' 
                 ? "flex items-center gap-3 w-full text-left p-3 rounded-2xl bg-m3-primaryContainer text-m3-onPrimaryContainer font-medium text-sm transition-all duration-150"
                 : "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150";
 
             document.getElementById('filter-unread-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1";
+            
+            document.getElementById('filter-settings-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1";
 
             renderSidebarFeeds();
             renderArticles();
@@ -543,8 +513,27 @@
             unreadFilterActive = true;
             activeFilter = 'bookmarks';
             
+            document.getElementById('feed-controls-bar').classList.remove('hidden');
+
             document.getElementById('filter-all-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150";
             document.getElementById('filter-unread-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl bg-m3-primaryContainer text-m3-onPrimaryContainer font-medium text-sm transition-all duration-150 mt-1";
+            document.getElementById('filter-settings-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1";
+
+            renderSidebarFeeds();
+            renderArticles();
+        }
+
+        // FIXED: Settings navigation routing just like bookmarks
+        function toggleSettingsView() {
+            unreadFilterActive = false;
+            activeFilter = 'settings';
+
+            // Hide the controls bar to keep settings screen completely clean
+            document.getElementById('feed-controls-bar').classList.add('hidden');
+
+            document.getElementById('filter-all-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150";
+            document.getElementById('filter-unread-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1";
+            document.getElementById('filter-settings-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl bg-m3-primaryContainer text-m3-onPrimaryContainer font-medium text-sm transition-all duration-150 mt-1";
 
             renderSidebarFeeds();
             renderArticles();
@@ -602,10 +591,9 @@
             throw new Error("All proxy chains failed.");
         }
 
-        // Clean & Extract images reliably from diverse sources (namespaced tags, embedded tags, descriptions)
+        // Clean & Extract images reliably from diverse sources
         function extractArticleImage(item, isXml = true) {
             if (!isXml) {
-                // JSON Object mapping
                 let image = item.thumbnail || '';
                 if (!image && item.enclosure && item.enclosure.link && item.enclosure.type && item.enclosure.type.startsWith('image')) {
                     image = item.enclosure.link;
@@ -617,16 +605,12 @@
                 return image;
             }
 
-            // XML Element mapping
             let image = '';
-            
-            // 1. media:content namespace check
             const mediaContent = item.getElementsByTagName('media:content')[0] || item.getElementsByTagName('media:thumbnail')[0];
             if (mediaContent && mediaContent.getAttribute('url')) {
                 image = mediaContent.getAttribute('url');
             }
 
-            // 2. enclosure attributes
             if (!image) {
                 const enclosure = item.getElementsByTagName('enclosure')[0];
                 if (enclosure && enclosure.getAttribute('type')?.startsWith('image')) {
@@ -634,7 +618,6 @@
                 }
             }
 
-            // 3. Deeper inline tag parsing (crucial for Android Police / Android Authority / Feedburner)
             if (!image) {
                 const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
                 const description = item.getElementsByTagName('description')[0]?.textContent || '';
@@ -671,7 +654,7 @@
                                 link: item.link || '#',
                                 pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
                                 description: cleanHtmlString(item.description || item.content || ''),
-                                image: img || getRandomImageFallback(item.title || '')
+                                image: img || '' 
                             };
                         });
                     } else {
@@ -693,7 +676,7 @@
                                 title, link,
                                 pubDate: pubDate ? new Date(pubDate) : new Date(),
                                 description: cleanHtmlString(desc),
-                                image: img || getRandomImageFallback(title)
+                                image: img || '' 
                             });
                         }
                         return parsed;
@@ -738,8 +721,8 @@
                     let targetG = Math.floor(g * mix + 27 * (1 - mix));
                     let targetB = Math.floor(b * mix + 32 * (1 - mix));
                     
-                    // FIXED: Safeguard Floor Clamp (Prevents cards from becoming too dark & invisible)
-                    const minColorFloor = 45; // Clamp so target mixed values are never completely black
+                    // Safeguard Floor Clamp
+                    const minColorFloor = 45; 
                     if (targetR < minColorFloor) targetR = minColorFloor;
                     if (targetG < minColorFloor) targetG = minColorFloor;
                     if (targetB < minColorFloor) targetB = minColorFloor;
@@ -759,6 +742,15 @@
             const container = document.getElementById('articles-container');
             const emptyState = document.getElementById('empty-state');
             const activeHeader = document.getElementById('active-feed-header');
+            
+            // Handle active view settings routing
+            if (activeFilter === 'settings') {
+                activeHeader.classList.add('hidden');
+                emptyState.classList.add('hidden');
+                renderSettingsPage(container);
+                return;
+            }
+
             let filtered = [];
 
             if (unreadFilterActive) {
@@ -797,10 +789,12 @@
             }
             emptyState.classList.add('hidden');
 
+            // Apply responsive grid layout for article cards
+            container.className = "grid grid-cols-1 md:grid-cols-2 gap-4";
+
             container.innerHTML = filtered.map(art => {
                 const isBookmarked = bookmarkedArticles.some(b => b.link === art.link);
                 const uniqueCardId = `card-${art.id}`;
-                // Double escape title for safest script template rendering
                 const safeTitle = art.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 
                 return `
@@ -814,12 +808,11 @@
                                 <span class="text-xs text-m3-onSurfaceVariant/60">${new Date(art.pubDate).toLocaleDateString()}</span>
                             </div>
                             
-                            <!-- FIXED: Fallback handling to ensure preview images NEVER show broken links -->
                             ${art.image ? `
-                                <div class="w-full h-36 rounded-xl overflow-hidden mb-4 bg-m3-surfaceContainerLow">
+                                <div class="image-container-wrapper w-full h-36 rounded-xl overflow-hidden mb-4 bg-m3-surfaceContainerLow">
                                     <img src="${art.image}" alt="${safeTitle}" 
                                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                                         onerror="this.onerror=null; this.src=getRandomImageFallback('${safeTitle}');" 
+                                         onerror="this.closest('.image-container-wrapper').remove();" 
                                          onload="tintCardFromImage(this.src, '${uniqueCardId}')">
                                 </div>
                             ` : ''}
@@ -840,6 +833,69 @@
                     </article>
                 `;
             }).join('');
+        }
+
+        // FIXED: Generates a beautiful Settings view page directly inside the articles column area
+        function renderSettingsPage(container) {
+            container.className = "flex flex-col gap-6 w-full max-w-3xl mx-auto";
+            container.innerHTML = `
+                <div class="bg-m3-surfaceContainer rounded-[28px] border border-m3-outline/10 p-6 md:p-8 flex flex-col gap-6">
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-gamer font-bold text-m3-primary tracking-wide mb-2 flex items-center gap-3">
+                            <span class="material-symbols-outlined text-2xl">settings</span>
+                            <span>READER SETTINGS</span>
+                        </h2>
+                        <p class="text-sm text-m3-onSurfaceVariant/80">Configure CORS proxies, export/import back-up configuration schemas, or perform factory resets.</p>
+                    </div>
+
+                    <hr class="border-m3-outline/10">
+
+                    <!-- CORS proxy section -->
+                    <div class="space-y-3">
+                        <label for="settings-proxy-selector" class="block text-xs font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide">CORS Proxy Mode</label>
+                        <select id="settings-proxy-selector" onchange="updateProxySettingFromPage()" class="bg-m3-surfaceContainerHighest text-m3-onSurface rounded-xl p-3.5 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer w-full text-sm">
+                            <option value="rss2json" ${selectedProxy === 'rss2json' ? 'selected' : ''}>RSS-to-JSON API (Recommended - Highly Stable)</option>
+                            <option value="corsproxy" ${selectedProxy === 'corsproxy' ? 'selected' : ''}>Corsproxy.io (Standard)</option>
+                            <option value="allorigins" ${selectedProxy === 'allorigins' ? 'selected' : ''}>AllOrigins API (Alternative)</option>
+                            <option value="codetabs" ${selectedProxy === 'codetabs' ? 'selected' : ''}>Codetabs Proxy (Alternative)</option>
+                            <option value="none" ${selectedProxy === 'none' ? 'selected' : ''}>Direct Request (No proxy)</option>
+                        </select>
+                        <p class="text-xs text-m3-onSurfaceVariant/60 leading-relaxed">Browsers isolate XML requests due to cross-origin limitations. The RSS-to-JSON parser formats feeds inside the secure proxy sandbox to make sure articles consistently fetch.</p>
+                    </div>
+
+                    <hr class="border-m3-outline/10">
+
+                    <!-- Export/Import backup options -->
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide">Backup & Portability Schema</h4>
+                        <p class="text-xs text-m3-onSurfaceVariant/80">Your custom channels and bookmarked articles are saved to your browser's LocalStorage. You can export them to a file for backup or migrating to another browser.</p>
+                        
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="exportData()" class="m3-btn px-6 py-2.5 bg-m3-secondaryContainer text-m3-onSecondaryContainer text-xs font-bold font-gamer rounded-full flex items-center justify-center gap-1.5 hover:opacity-90">
+                                <span class="material-symbols-outlined text-base">download</span> EXPORT SCHEMA
+                            </button>
+                            <button onclick="triggerImport()" class="m3-btn px-6 py-2.5 border border-m3-outline text-m3-onSurface text-xs font-bold font-gamer rounded-full flex items-center justify-center gap-1.5 hover:bg-m3-surfaceVariant/30">
+                                <span class="material-symbols-outlined text-base">upload</span> IMPORT SCHEMA
+                            </button>
+                            <input type="file" id="settings-import-file-input" onchange="handleImportFile(event)" accept=".json" class="hidden">
+                        </div>
+                    </div>
+
+                    <hr class="border-m3-outline/10">
+
+                    <!-- System reset block -->
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-gamer font-bold text-m3-error uppercase tracking-wide">Danger Zone</h4>
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-m3-errorContainer/10 border border-m3-error/20">
+                            <p class="text-xs text-m3-onSurfaceVariant/80 max-w-md">Completely wipe all stored channels, feed modifications, custom icons, and bookmarked articles, and reset to defaults.</p>
+                            <button onclick="restoreDefaults()" class="m3-btn px-5 py-2.5 bg-m3-error/20 text-m3-error hover:bg-m3-error/30 font-bold font-gamer text-xs rounded-xl flex items-center gap-1.5 self-end sm:self-center">
+                                <span class="material-symbols-outlined text-sm">restart_alt</span> FACTORY RESET
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            `;
         }
 
         function toggleBookmark(artEncoded) {
@@ -971,10 +1027,13 @@
             });
         }
 
-        function updateProxySetting() {
-            selectedProxy = document.getElementById('proxy-selector').value;
-            localStorage.setItem('m3_rss_proxy', selectedProxy);
-            fetchAllFeedArticles();
+        function updateProxySettingFromPage() {
+            const selector = document.getElementById('settings-proxy-selector');
+            if (selector) {
+                selectedProxy = selector.value;
+                localStorage.setItem('m3_rss_proxy', selectedProxy);
+                fetchAllFeedArticles();
+            }
         }
 
         // Import & Export Backup implementation
@@ -996,7 +1055,10 @@
         }
 
         function triggerImport() {
-            document.getElementById('import-file-input').click();
+            const fileInput = document.getElementById('settings-import-file-input');
+            if (fileInput) {
+                fileInput.click();
+            }
         }
 
         function handleImportFile(event) {
@@ -1041,7 +1103,6 @@
         function hashCode(s) { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return Math.abs(h); }
         
         function getRandomImageFallback(title) { 
-            // Return visual patterns
             const imageIds = ['1618005182384-a83a8bd57fbe','1579546929518-9e396f3cc809','1550751827-4bd374c3f58b','1526374965328-7f61d4dc18c5'];
             const id = imageIds[hashCode(title) % imageIds.length];
             return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=500&q=80`; 
