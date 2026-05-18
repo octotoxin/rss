@@ -1,0 +1,18 @@
+{
+  "short_name": "Chronicle",
+  "name": "Chronicle Expressive RSS Reader",
+  "description": "Premium, privacy-friendly, fully client-side static RSS reader built with Material 3 Expressive guidelines.",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%231D1B20'%3E%3Crect width='512' height='512' rx='128' fill='%231D1B20'/%3E%3Ccircle cx='150' cy='362' r='48' fill='%23D0BCFF'/%3E%3Cpath d='M100 110v60c132 0 242 110 242 242h60c0-166.8-135.2-302-302-302zm0 120v60c66 0 122 56 122 122h60c0-100.5-81.5-182-182-182z' fill='%23D0BCFF'/%3E%3C/svg%3E",
+      "type": "image/svg+xml",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#141218",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#1D1B20"
+}
