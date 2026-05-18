@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chronicle // Expressive RSS Reader</title>
+    <!-- Import Google Sans Flex, Inter, and Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..1000&family=Inter:wght@300;400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS for utility structural layouts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Google Sans Flex"', 'Inter', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        // Material 3 Dark Palette
+                        m3: {
+                            primary: '#D0BCFF', // Primary purple accent
+                            onPrimary: '#381E72',
+                            primaryContainer: '#4F378B',
+                            onPrimaryContainer: '#EADDFF',
+                            secondary: '#CCC2DC',
+                            onSecondary: '#332D41',
+                            secondaryContainer: '#4A4458',
+                            onSecondaryContainer: '#E8DEF8',
+                            tertiary: '#EFB8C8',
+                            onTertiary: '#492532',
+                            background: '#141218', // Deep expressive dark
+                            onBackground: '#E6E1E5',
+                            surface: '#1D1B20', // Elevating container surface
+                            onSurface: '#E6E1E5',
+                            surfaceVariant: '#49454F',
+                            onSurfaceVariant: '#CAC4D0',
+                            outline: '#938F99',
+                            outlineVariant: '#49454F',
+                            error: '#F2B8B5',
+                            onError: '#601410',
+                            errorContainer: '#8C1D18',
+                            onErrorContainer: '#F9DEDC',
+                            surfaceContainerLowest: '#0F0D13',
+                            surfaceContainerLow: '#1D1B20',
+                            surfaceContainer: '#211F26',
+                            surfaceContainerHigh: '#2B2930',
+                            surfaceContainerHighest: '#36343B'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Material 3 Micro-interactions & Custom Typographics */
+        body {
+            font-family: "Google Sans Flex", "Inter", sans-serif;
+            background-color: #141218;
+            color: #E6E1E5;
+            overflow-x: hidden;
+            font-variation-settings: "opsz" 12, "wght" 400;
+        }
+
+        /* Expressive dynamic weights */
+        h1, h2, h3, .m3-title {
+            font-variation-settings: "opsz" 24, "wght" 700;
+        }
+
+        /* Custom Scrollbar to match Dark Material Design */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #141218;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #49454F;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #938F99;
+        }
+
+        /* Material Ripple Simulation & Card elevation hover transition */
+        .m3-interactive-card {
+            transition: transform 250ms cubic-bezier(0.2, 0, 0, 1), 
+                        background-color 200ms ease, 
+                        box-shadow 250ms cubic-bezier(0.2, 0, 0, 1);
+        }
+        .m3-interactive-card:hover {
+            transform: translateY(-4px);
+            background-color: #2B2930;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Material Ripple effect helper */
+        .m3-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
+        }
+        .m3-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 300ms ease, opacity 300ms ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .m3-btn:active::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            transition: 0s;
+        }
+
+        /* Smooth tab highlight bar translation */
+        .tab-indicator {
+            transition: transform 250ms cubic-bezier(0.2, 0, 0, 1), width 250ms cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        /* Shimmer loading skeleton effect */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .shimmer-bg {
+            background: linear-gradient(90deg, #211F26 25%, #36343B 50%, #211F26 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+        }
+
+        /* Expressive text line clamping */
+        .clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- TOP APP BAR -->
+    <header class="sticky top-0 z-50 bg-m3-background/90 backdrop-blur-md border-b border-m3-outline/10 px-4 md:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outward text-3xl text-m3-primary font-bold">rss_feed</span>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight text-m3-onBackground flex items-center gap-2">
+                    Chronicle <span class="text-xs bg-m3-primaryContainer text-m3-onPrimaryContainer px-2.5 py-1 rounded-full font-semibold uppercase tracking-wider">Static Reader</span>
+                </h1>
+                <p class="text-xs text-m3-onSurfaceVariant/70 hidden sm:block">Material 3 Expressive Static RSS Feed Client</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- Add Feed Button -->
+            <button onclick="openModal('add-feed-modal')" class="m3-btn flex items-center gap-2 bg-m3-primary text-m3-onPrimary hover:bg-m3-primary/90 px-4 py-2.5 rounded-full text-sm font-medium shadow-lg hover:shadow-xl">
+                <span class="material-symbols-outlined text-lg">add</span>
+                <span class="hidden sm:inline">Add Feed</span>
+            </button>
+            <!-- Manage Feeds Button -->
+            <button onclick="openModal('manage-feeds-modal')" class="m3-btn flex items-center gap-2 border border-m3-outline text-m3-onBackground hover:bg-m3-surfaceVariant/40 px-4 py-2.5 rounded-full text-sm font-medium">
+                <span class="material-symbols-outlined text-lg">settings</span>
+                <span class="hidden sm:inline">Manage</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENT WRAPPER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 md:px-8 py-6 grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <!-- MAIN FEED ARTICLE FEED (Set to show first on mobile via order-1) -->
+        <section class="order-1 lg:order-2 lg:col-span-3 flex flex-col gap-6">
+            
+            <!-- CONTROLS & SEARCH BAR -->
+            <div class="bg-m3-surfaceContainerHigh rounded-3xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border border-m3-outline/10">
+                <div class="relative flex-grow">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-m3-onSurfaceVariant/60">search</span>
+                    <input type="text" id="article-search" oninput="searchArticles()" placeholder="Search articles by title, content or feed name..." class="w-full bg-m3-surfaceContainerLowest text-m3-onSurface pl-12 pr-4 py-3 rounded-2xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary placeholder-m3-onSurfaceVariant/50 text-sm transition-all">
+                </div>
+                <div class="flex items-center gap-2 justify-end">
+                    <button onclick="refreshCurrentFeeds()" class="m3-btn flex items-center justify-center gap-2 bg-m3-secondaryContainer text-m3-onSecondaryContainer hover:bg-m3-secondaryContainer/80 p-3 md:px-4 rounded-2xl text-sm font-medium" title="Refresh Feed">
+                        <span class="material-symbols-outlined">refresh</span>
+                        <span class="hidden md:inline">Refresh</span>
+                    </button>
+                    <select id="sort-selector" onchange="changeSortOrder()" class="bg-m3-surfaceContainerLowest text-m3-onSurface text-sm rounded-2xl px-4 py-3 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="title">Alphabetical (A-Z)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- DYNAMIC STATUS INFO / FEED DETAILS -->
+            <div id="active-feed-header" class="hidden animate-fade-in">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-m3-primaryContainer/40 text-m3-primary rounded-2xl">
+                        <span class="material-symbols-outlined text-2xl">rss_feed</span>
+                    </div>
+                    <div>
+                        <h2 id="active-feed-title" class="text-2xl font-bold text-m3-onBackground">Feed Title</h2>
+                        <p id="active-feed-description" class="text-sm text-m3-onSurfaceVariant/80 clamp-2 mt-0.5">Feed description or loading status info...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FEED ENTRIES GRID CONTAINER -->
+            <div id="articles-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Skeletons render on load -->
+                <div class="shimmer-card h-64 bg-m3-surfaceContainer rounded-3xl border border-m3-outline/10 p-5 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="shimmer-bg h-4 w-1/4 rounded"></div>
+                        <div class="shimmer-bg h-6 w-3/4 rounded"></div>
+                        <div class="shimmer-bg h-4 w-full rounded"></div>
+                        <div class="shimmer-bg h-4 w-5/6 rounded"></div>
+                    </div>
+                    <div class="shimmer-bg h-10 w-full rounded-xl mt-4"></div>
+                </div>
+                <div class="shimmer-card h-64 bg-m3-surfaceContainer rounded-3xl border border-m3-outline/10 p-5 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="shimmer-bg h-4 w-1/3 rounded"></div>
+                        <div class="shimmer-bg h-6 w-2/3 rounded"></div>
+                        <div class="shimmer-bg h-4 w-full rounded"></div>
+                        <div class="shimmer-bg h-4 w-4/5 rounded"></div>
+                    </div>
+                    <div class="shimmer-bg h-10 w-full rounded-xl mt-4"></div>
+                </div>
+                <!-- Skeletons end -->
+            </div>
+
+            <!-- Empty State / No Articles Indicator -->
+            <div id="empty-state" class="hidden py-16 flex flex-col items-center justify-center text-center gap-4 bg-m3-surfaceContainer/50 rounded-3xl border border-m3-outline/10">
+                <span class="material-symbols-outlined text-6xl text-m3-outline">dynamic_feed</span>
+                <div class="max-w-md px-4">
+                    <h3 class="text-lg font-bold text-m3-onBackground">No Articles Loaded</h3>
+                    <p id="empty-state-text" class="text-sm text-m3-onSurfaceVariant/70 mt-1">Please configure or add a new RSS subscription to view content dynamically parsed in the browser.</p>
+                </div>
+                <button onclick="openModal('add-feed-modal')" class="m3-btn bg-m3-primary text-m3-onPrimary px-5 py-2.5 rounded-full text-sm font-medium mt-2">
+                    Subscribe Now
+                </button>
+            </div>
+
+        </section>
+
+        <!-- SIDEBAR: FEEDS LIST (Set to show last on mobile via order-2, first on desktop via lg:order-1) -->
+        <aside class="order-2 lg:order-1 lg:col-span-1 flex flex-col gap-4">
+            <div class="bg-m3-surfaceContainer rounded-3xl p-5 border border-m3-outline/10 shadow-sm flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-md font-bold tracking-wide text-m3-onSurfaceVariant uppercase text-xs">Your Subscriptions</h2>
+                    <span id="feed-count" class="text-xs bg-m3-secondaryContainer text-m3-onSecondaryContainer px-2 py-0.5 rounded-full font-medium">0</span>
+                </div>
+
+                <!-- Feed Categories/Shortcuts list -->
+                <div class="flex flex-col gap-1 overflow-y-auto max-h-[300px] lg:max-h-[500px]" id="sidebar-feeds-list">
+                    <!-- Dynamic feed list injects here -->
+                    <div class="text-sm text-m3-onSurfaceVariant/60 italic p-4 text-center">No feeds added yet. Click "Add Feed" to begin!</div>
+                </div>
+                
+                <hr class="border-m3-outline/10">
+
+                <!-- Dynamic feed filters -->
+                <div class="flex flex-col gap-1">
+                    <button onclick="filterBySource('all')" id="filter-all-btn" class="flex items-center gap-3 w-full text-left p-3 rounded-2xl bg-m3-primaryContainer text-m3-onPrimaryContainer font-medium text-sm transition-all duration-150">
+                        <span class="material-symbols-outlined">auto_awesome</span>
+                        <span class="flex-grow">All Subscriptions</span>
+                    </button>
+                    <button onclick="toggleUnreadOnly()" id="filter-unread-btn" class="flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1">
+                        <span class="material-symbols-outlined">bookmark_border</span>
+                        <span class="flex-grow">Bookmarked Articles</span>
+                        <span id="bookmark-count" class="text-xs bg-m3-outlineVariant text-m3-onSurfaceVariant px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PROXIES UTILITY INFO -->
+            <div class="bg-m3-surfaceContainerLow rounded-3xl p-5 border border-m3-outline/10 text-xs text-m3-onSurfaceVariant/80 flex flex-col gap-3">
+                <div class="flex items-center gap-2 text-m3-primary font-semibold">
+                    <span class="material-symbols-outlined text-sm">shield</span>
+                    <span>CORS Proxy Configuration</span>
+                </div>
+                <p>Browsers restrict direct XML fetching from other domains. We automatically route and fail-over queries through trusted, high-performance CORS proxies.</p>
+                <select id="proxy-selector" onchange="updateProxySetting()" class="bg-m3-surfaceContainerHighest text-m3-onSurface rounded-xl p-2 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer w-full">
+                    <option value="rss2json">RSS-to-JSON API (Highly Stable & Fast)</option>
+                    <option value="corsproxy">Corsproxy.io (Standard Proxy)</option>
+                    <option value="allorigins">AllOrigins API (Standard Proxy)</option>
+                    <option value="codetabs">Codetabs Proxy (Alternative)</option>
+                    <option value="none">Direct Request (No proxy)</option>
+                </select>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-m3-surfaceContainerLowest py-8 px-4 text-center text-xs text-m3-onSurfaceVariant/50 border-t border-m3-outline/10 mt-12">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p>© 2026 Chronicle RSS. Crafted following Material 3 guidelines. Powered fully client-side.</p>
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">cookie</span> Cookies Enabled</span>
+                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">code</span> Static Hosting Ready</span>
+            </div>
+        </div>
+    </footer>
+
+
+    <!-- MODAL 1: ADD NEW FEED MODAL -->
+    <div id="add-feed-modal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 hidden backdrop-blur-xs transition-opacity duration-200">
+        <div class="bg-m3-surface rounded-[28px] max-w-lg w-full p-6 md:p-8 shadow-2xl border border-m3-outline/20 animate-scale-up">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-m3-primaryContainer text-m3-onPrimaryContainer rounded-xl">
+                        <span class="material-symbols-outlined">library_add</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-m3-onBackground">Add RSS Feed</h3>
+                </div>
+                <button onclick="closeModal('add-feed-modal')" class="text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/40 p-2 rounded-full flex items-center justify-center">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <!-- Content -->
+            <form onsubmit="handleAddFeedSubmit(event)" class="space-y-4">
+                <div>
+                    <label for="feed-url-input" class="block text-xs font-semibold uppercase tracking-wider text-m3-primary mb-2">Feed URL</label>
+                    <input type="url" id="feed-url-input" required placeholder="https://news.ycombinator.com/rss" class="w-full bg-m3-surfaceContainerHighest text-m3-onSurface px-4 py-3 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary placeholder-m3-onSurfaceVariant/40 text-sm">
+                </div>
+                <div>
+                    <label for="feed-name-input" class="block text-xs font-semibold uppercase tracking-wider text-m3-primary mb-2">Feed Display Name (Optional)</label>
+                    <input type="text" id="feed-name-input" placeholder="Hacker News (Leave empty to fetch auto-title)" class="w-full bg-m3-surfaceContainerHighest text-m3-onSurface px-4 py-3 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary placeholder-m3-onSurfaceVariant/40 text-sm">
+                </div>
+                
+                <!-- Quick Suggestion Badges -->
+                <div>
+                    <span class="block text-xs font-semibold uppercase tracking-wider text-m3-onSurfaceVariant/80 mb-2">Quick Presets</span>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setPresetFeed('https://news.ycombinator.com/rss', 'Hacker News')" class="px-3 py-1.5 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10 transition-colors">Hacker News</button>
+                        <button type="button" onclick="setPresetFeed('https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml', 'NYT World')" class="px-3 py-1.5 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10 transition-colors">NYT World</button>
+                        <button type="button" onclick="setPresetFeed('https://feeds.feedburner.com/TechCrunch/', 'TechCrunch')" class="px-3 py-1.5 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10 transition-colors">TechCrunch</button>
+                        <button type="button" onclick="setPresetFeed('https://www.theverge.com/rss/index.xml', 'The Verge')" class="px-3 py-1.5 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10 transition-colors">The Verge</button>
+                    </div>
+                </div>
+
+                <!-- Form Controls -->
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" onclick="closeModal('add-feed-modal')" class="px-5 py-2.5 text-sm font-medium text-m3-onBackground hover:bg-m3-surfaceVariant/30 rounded-full transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 bg-m3-primary text-m3-onPrimary hover:bg-m3-primary/95 text-sm font-semibold rounded-full shadow-md">Subscribe Feed</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL 2: MANAGE FEEDS MODAL -->
+    <div id="manage-feeds-modal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 hidden backdrop-blur-xs transition-opacity duration-200">
+        <div class="bg-m3-surface rounded-[28px] max-w-2xl w-full p-6 md:p-8 shadow-2xl border border-m3-outline/20 animate-scale-up">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-m3-primaryContainer text-m3-onPrimaryContainer rounded-xl">
+                        <span class="material-symbols-outlined">settings_suggest</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-m3-onBackground">Manage Subscriptions</h3>
+                </div>
+                <button onclick="closeModal('manage-feeds-modal')" class="text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/40 p-2 rounded-full flex items-center justify-center">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <p class="text-sm text-m3-onSurfaceVariant/80 mb-4">You can view your feeds stored locally below, remove redundant subscriptions or completely reset back to defaults.</p>
+
+            <!-- Scrollable list of feeds -->
+            <div class="max-h-72 overflow-y-auto border border-m3-outline/10 rounded-2xl bg-m3-surfaceContainerLow p-3 space-y-2 mb-6" id="manage-feeds-list">
+                <!-- dynamic injection -->
+                <p class="text-center text-sm py-4 text-m3-onSurfaceVariant/50">No feeds to manage.</p>
+            </div>
+
+            <!-- Footer options -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-m3-outline/10">
+                <button onclick="restoreDefaults()" class="text-xs text-m3-error hover:underline flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">restart_alt</span> Reset back to standard default feeds
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeModal('manage-feeds-modal')" class="px-6 py-2.5 bg-m3-primary text-m3-onPrimary rounded-full text-sm font-semibold">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- CUSTOM ALERT MESSAGE DIALOG TO REPLACE SYSTEM ALERTS -->
+    <div id="custom-dialog" class="fixed inset-0 bg-black/70 z-[110] flex items-center justify-center p-4 hidden">
+        <div class="bg-m3-surfaceContainerHighest rounded-[28px] max-w-sm w-full p-6 shadow-2xl border border-m3-outline/20">
+            <h4 id="dialog-title" class="text-lg font-bold text-m3-onBackground mb-2">Message</h4>
+            <p id="dialog-message" class="text-sm text-m3-onSurfaceVariant/90 mb-6">Details here...</p>
+            <div class="flex justify-end">
+                <button onclick="closeDialog()" class="px-6 py-2 bg-m3-primary text-m3-onPrimary text-xs font-semibold rounded-full">Ok</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- JS LOGIC CORE -->
+    <script>
+        // Default seed subscriptions
+        const DEFAULT_FEEDS = [
+            { id: "feed-1", name: "Hacker News", url: "https://news.ycombinator.com/rss" },
+            { id: "feed-2", name: "NYT World", url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml" },
+            { id: "feed-3", name: "The Verge", url: "https://www.theverge.com/rss/index.xml" }
+        ];
+
+        // State variables
+        let subscriptions = [];
+        let allArticles = [];
+        let bookmarkedArticles = [];
+        let activeFilter = 'all'; // 'all' or feed ID
+        let unreadFilterActive = false; // acts as bookmarked active check
+        let currentSort = 'newest';
+        let searchQuery = '';
+        let selectedProxy = 'rss2json'; // Defaulted to the highly reliable RSS-to-JSON API
+
+        // On Load initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            initStorageAndLoad();
+            updateBookmarkBadge();
+        });
+
+        // Safe client storage with fallbacks (Cookies implementation as requested)
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i=0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1,c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function setCookie(name, value, days = 365) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days*24*60*60*1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            // SameSite strict dark mode secure setup
+            document.cookie = name + "=" + (value || "")  + expires + "; path=/; SameSite=Strict";
+        }
+
+        function initStorageAndLoad() {
+            // Read subscriptions from Cookies
+            const savedFeedsRaw = getCookie('m3_rss_subscriptions');
+            const savedProxy = getCookie('m3_rss_proxy');
+            const savedBookmarksRaw = getCookie('m3_rss_bookmarks');
+
+            if (savedProxy) {
+                selectedProxy = savedProxy;
+                document.getElementById('proxy-selector').value = selectedProxy;
+            } else {
+                // Default to rss2json on fresh load
+                selectedProxy = 'rss2json';
+                document.getElementById('proxy-selector').value = 'rss2json';
+            }
+
+            if (savedFeedsRaw) {
+                try {
+                    subscriptions = JSON.parse(decodeURIComponent(savedFeedsRaw));
+                } catch (e) {
+                    subscriptions = [...DEFAULT_FEEDS];
+                }
+            } else {
+                subscriptions = [...DEFAULT_FEEDS];
+                saveSubscriptions();
+            }
+
+            if (savedBookmarksRaw) {
+                try {
+                    bookmarkedArticles = JSON.parse(decodeURIComponent(savedBookmarksRaw));
+                } catch(e) {
+                    bookmarkedArticles = [];
+                }
+            }
+
+            renderSidebarFeeds();
+            fetchAllFeedArticles();
+        }
+
+        function saveSubscriptions() {
+            const encoded = encodeURIComponent(JSON.stringify(subscriptions));
+            setCookie('m3_rss_subscriptions', encoded);
+            renderSidebarFeeds();
+        }
+
+        function saveBookmarks() {
+            const encoded = encodeURIComponent(JSON.stringify(bookmarkedArticles));
+            setCookie('m3_rss_bookmarks', encoded);
+            updateBookmarkBadge();
+        }
+
+        // Render UI Left side feed feeds list
+        function renderSidebarFeeds() {
+            const container = document.getElementById('sidebar-feeds-list');
+            document.getElementById('feed-count').textContent = subscriptions.length;
+
+            if (subscriptions.length === 0) {
+                container.innerHTML = `<div class="text-sm text-m3-onSurfaceVariant/60 italic p-4 text-center">No feeds added.</div>`;
+                return;
+            }
+
+            container.innerHTML = subscriptions.map(feed => {
+                const isActive = activeFilter === feed.id && !unreadFilterActive;
+                const activeClasses = isActive 
+                    ? 'bg-m3-secondaryContainer text-m3-onSecondaryContainer font-semibold' 
+                    : 'text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 hover:text-m3-onSurface';
+                
+                return `
+                    <div class="flex items-center gap-1 group w-full">
+                        <button onclick="filterBySource('${feed.id}')" class="flex items-center gap-3 flex-grow text-left p-2.5 rounded-2xl text-sm transition-all duration-150 ${activeClasses}">
+                            <span class="material-symbols-outlined text-md">rss_feed</span>
+                            <span class="truncate max-w-[150px]" title="${feed.name}">${feed.name}</span>
+                        </button>
+                        <button onclick="confirmRemoveFeed('${feed.id}')" class="opacity-0 group-hover:opacity-100 p-2 text-m3-error hover:bg-m3-errorContainer/20 rounded-xl transition-all" title="Remove subscription">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateBookmarkBadge() {
+            document.getElementById('bookmark-count').textContent = bookmarkedArticles.length;
+        }
+
+        // Setup active filter selection states
+        function filterBySource(sourceId) {
+            unreadFilterActive = false;
+            activeFilter = sourceId;
+            
+            // Adjust left main filters display style
+            document.getElementById('filter-all-btn').className = sourceId === 'all' 
+                ? "flex items-center gap-3 w-full text-left p-3 rounded-2xl bg-m3-primaryContainer text-m3-onPrimaryContainer font-medium text-sm transition-all duration-150"
+                : "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150";
+
+            document.getElementById('filter-unread-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1";
+
+            renderSidebarFeeds();
+            renderArticles();
+        }
+
+        function toggleUnreadOnly() {
+            unreadFilterActive = true;
+            activeFilter = 'bookmarks';
+            
+            document.getElementById('filter-all-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150";
+            document.getElementById('filter-unread-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl bg-m3-primaryContainer text-m3-onPrimaryContainer font-medium text-sm transition-all duration-150 mt-1";
+
+            renderSidebarFeeds();
+            renderArticles();
+        }
+
+        // Clean query fetch with a built-in automated fallback proxy and API chain to guarantee successful retrieval
+        async function fetchFeed(feedUrl) {
+            const chain = [];
+
+            if (selectedProxy === 'none') {
+                chain.push({ name: 'direct', fetcher: async () => {
+                    const r = await fetch(feedUrl);
+                    const t = await r.text();
+                    return { type: 'xml', data: t };
+                }});
+            } else {
+                // Initialize ordered priority queue based on selection
+                const options = [
+                    {
+                        name: 'rss2json',
+                        fetcher: async () => {
+                            const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`);
+                            if (!r.ok) throw new Error();
+                            const json = await r.json();
+                            if (json.status !== 'ok') throw new Error();
+                            return { type: 'json', data: json };
+                        }
+                    },
+                    {
+                        name: 'corsproxy',
+                        fetcher: async () => {
+                            const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(feedUrl)}`);
+                            if (!r.ok) throw new Error();
+                            const t = await r.text();
+                            if (!t.trim().startsWith('<')) throw new Error();
+                            return { type: 'xml', data: t };
+                        }
+                    },
+                    {
+                        name: 'allorigins',
+                        fetcher: async () => {
+                            const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`);
+                            if (!r.ok) throw new Error();
+                            const json = await r.json();
+                            if (!json || !json.contents) throw new Error();
+                            const t = json.contents;
+                            if (!t.trim().startsWith('<')) throw new Error();
+                            return { type: 'xml', data: t };
+                        }
+                    },
+                    {
+                        name: 'codetabs',
+                        fetcher: async () => {
+                            const r = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(feedUrl)}`);
+                            if (!r.ok) throw new Error();
+                            const t = await r.text();
+                            if (!t.trim().startsWith('<')) throw new Error();
+                            return { type: 'xml', data: t };
+                        }
+                    }
+                ];
+
+                // Sort options so selected one is tried first
+                options.sort((a, b) => {
+                    if (a.name === selectedProxy) return -1;
+                    if (b.name === selectedProxy) return 1;
+                    return 0;
+                });
+
+                chain.push(...options);
+            }
+
+            // Execute the chain and return the first success
+            for (const step of chain) {
+                try {
+                    const res = await step.fetcher();
+                    if (res) return res;
+                } catch (e) {
+                    console.warn(`Fetch method '${step.name}' failed. Trying fallback...`);
+                }
+            }
+
+            throw new Error("All configured CORS proxies and JSON converters failed to retrieve feed.");
+        }
+
+        // Fetch articles from all configured feeds in state
+        async function fetchAllFeedArticles() {
+            showLoadingSkeleton();
+            allArticles = [];
+
+            if (subscriptions.length === 0) {
+                hideLoadingSkeleton();
+                renderArticles();
+                return;
+            }
+
+            const promises = subscriptions.map(async (feed) => {
+                try {
+                    const result = await fetchFeed(feed.url);
+                    
+                    if (result.type === 'json') {
+                        // Handle parsed JSON from rss2json
+                        const items = result.data.items || [];
+                        return items.map((item, i) => {
+                            let image = item.thumbnail || '';
+                            if (!image && item.description) {
+                                const imgMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
+                                if (imgMatch) image = imgMatch[1];
+                            }
+                            return {
+                                id: `${feed.id}-${i}-${hashCode(item.title || '')}`,
+                                feedId: feed.id,
+                                feedName: feed.name,
+                                title: item.title || 'Untitled Article',
+                                link: item.link || '#',
+                                pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
+                                description: cleanHtmlString(item.description || item.content || ''),
+                                image: image || getRandomImageFallback(item.title || '')
+                            };
+                        });
+                    } else {
+                        // Handle standard XML parsing
+                        const parser = new DOMParser();
+                        const xmlDoc = parser.parseFromString(result.data, "text/xml");
+                        const isAtom = xmlDoc.getElementsByTagName('feed').length > 0;
+                        
+                        if (isAtom) {
+                            const entries = xmlDoc.getElementsByTagName('entry');
+                            const parsedEntries = [];
+                            for(let i=0; i < Math.min(entries.length, 15); i++) {
+                                const entry = entries[i];
+                                const title = entry.getElementsByTagName('title')[0]?.textContent || 'Untitled Article';
+                                const link = entry.getElementsByTagName('link')[0]?.getAttribute('href') || '#';
+                                const updated = entry.getElementsByTagName('updated')[0]?.textContent || entry.getElementsByTagName('published')[0]?.textContent || '';
+                                const content = entry.getElementsByTagName('content')[0]?.textContent || entry.getElementsByTagName('summary')[0]?.textContent || '';
+                                
+                                let image = '';
+                                const mediaContent = entry.getElementsByTagName('media:content')[0] || entry.getElementsByTagName('content')[0];
+                                if (mediaContent && mediaContent.getAttribute('url')) {
+                                    image = mediaContent.getAttribute('url');
+                                }
+
+                                parsedEntries.push({
+                                    id: `${feed.id}-${i}-${hashCode(title)}`,
+                                    feedId: feed.id,
+                                    feedName: feed.name,
+                                    title: title,
+                                    link: link,
+                                    pubDate: updated ? new Date(updated) : new Date(),
+                                    description: cleanHtmlString(content),
+                                    image: image || getRandomImageFallback(title)
+                                });
+                            }
+                            return parsedEntries;
+                        } else {
+                            // Standard RSS 2.0 Parser
+                            const items = xmlDoc.getElementsByTagName('item');
+                            const parsedItems = [];
+                            for(let i=0; i < Math.min(items.length, 15); i++) {
+                                const item = items[i];
+                                const title = item.getElementsByTagName('title')[0]?.textContent || 'Untitled Article';
+                                const link = item.getElementsByTagName('link')[0]?.textContent || '#';
+                                const pubDateStr = item.getElementsByTagName('pubDate')[0]?.textContent || '';
+                                const description = item.getElementsByTagName('description')[0]?.textContent || '';
+                                
+                                let image = '';
+                                const media = item.getElementsByTagName('media:content')[0];
+                                if (media && media.getAttribute('url')) {
+                                    image = media.getAttribute('url');
+                                } else {
+                                    const enclosure = item.getElementsByTagName('enclosure')[0];
+                                    if (enclosure && enclosure.getAttribute('type')?.startsWith('image')) {
+                                        image = enclosure.getAttribute('url');
+                                    } else {
+                                        const imgMatch = description.match(/<img[^>]+src="([^">]+)"/);
+                                        if (imgMatch) image = imgMatch[1];
+                                    }
+                                }
+
+                                parsedItems.push({
+                                    id: `${feed.id}-${i}-${hashCode(title)}`,
+                                    feedId: feed.id,
+                                    feedName: feed.name,
+                                    title: title,
+                                    link: link,
+                                    pubDate: pubDateStr ? new Date(pubDateStr) : new Date(),
+                                    description: cleanHtmlString(description),
+                                    image: image || getRandomImageFallback(title)
+                                });
+                            }
+                            return parsedItems;
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Error parsing feed: ${feed.name}`, err);
+                    return []; // fallback so other feeds loading still work
+                }
+            });
+
+            const results = await Promise.all(promises);
+            // Flatten list
+            allArticles = results.flat();
+            hideLoadingSkeleton();
+            renderArticles();
+        }
+
+        // Render articles to feed container view
+        function renderArticles() {
+            const container = document.getElementById('articles-container');
+            const emptyState = document.getElementById('empty-state');
+            const activeHeader = document.getElementById('active-feed-header');
+
+            let filtered = [];
+
+            if (unreadFilterActive) {
+                // Show Bookmarked Articles
+                filtered = [...bookmarkedArticles];
+                document.getElementById('active-feed-title').textContent = "Bookmarks";
+                document.getElementById('active-feed-description').textContent = "Showing all saved offline articles across cookie persistence.";
+                activeHeader.classList.remove('hidden');
+            } else if (activeFilter === 'all') {
+                filtered = [...allArticles];
+                activeHeader.classList.add('hidden');
+            } else {
+                filtered = allArticles.filter(a => a.feedId === activeFilter);
+                const currentFeed = subscriptions.find(f => f.id === activeFilter);
+                if (currentFeed) {
+                    document.getElementById('active-feed-title').textContent = currentFeed.name;
+                    document.getElementById('active-feed-description').textContent = `Showing articles from target feed URL: ${currentFeed.url}`;
+                    activeHeader.classList.remove('hidden');
+                }
+            }
+
+            // Search Filter query
+            if (searchQuery.trim() !== '') {
+                const q = searchQuery.toLowerCase();
+                filtered = filtered.filter(a => 
+                    a.title.toLowerCase().includes(q) || 
+                    a.description.toLowerCase().includes(q) || 
+                    a.feedName.toLowerCase().includes(q)
+                );
+            }
+
+            // Sorting logic
+            if (currentSort === 'newest') {
+                filtered.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+            } else if (currentSort === 'oldest') {
+                filtered.sort((a, b) => new Date(a.pubDate) - new Date(b.pubDate));
+            } else if (currentSort === 'title') {
+                filtered.sort((a, b) => a.title.localeCompare(b.title));
+            }
+
+            // Display UI
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                document.getElementById('empty-state-text').textContent = searchQuery.trim() !== '' 
+                    ? "No articles matched your search query in this selection. Try adjusting filters." 
+                    : "No articles are currently populated here.";
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            container.innerHTML = filtered.map(art => {
+                const isBookmarked = bookmarkedArticles.some(b => b.link === art.link);
+                const formattedDate = new Date(art.pubDate).toLocaleDateString(undefined, {
+                    month: 'short', day: 'numeric', year: 'numeric'
+                });
+
+                return `
+                    <article class="m3-interactive-card bg-m3-surfaceContainer rounded-[24px] border border-m3-outline/10 p-5 flex flex-col justify-between h-full group overflow-hidden relative">
+                        <div>
+                            <!-- Header Info -->
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="text-xs bg-m3-primaryContainer/30 text-m3-primary font-bold px-3 py-1 rounded-full uppercase tracking-wider">${art.feedName}</span>
+                                <span class="text-xs text-m3-onSurfaceVariant/60 font-medium">${formattedDate}</span>
+                            </div>
+
+                            <!-- Image Preview if available -->
+                            ${art.image ? `
+                                <div class="w-full h-32 rounded-xl overflow-hidden mb-4 bg-m3-surfaceContainerLow">
+                                    <img src="${art.image}" alt="Article Preview" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.style.display='none'">
+                                </div>
+                            ` : ''}
+
+                            <!-- Title -->
+                            <h3 class="text-base font-bold text-m3-onSurface leading-snug tracking-tight mb-2 group-hover:text-m3-primary transition-colors">
+                                <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="hover:underline">
+                                    ${art.title}
+                                </a>
+                            </h3>
+
+                            <!-- Clean Description preview -->
+                            <p class="text-xs text-m3-onSurfaceVariant/80 leading-relaxed mb-4 clamp-3">
+                                ${art.description || 'No descriptive excerpt text preview available for this entry.'}
+                            </p>
+                        </div>
+
+                        <!-- Card action buttons following Expressive guidelines -->
+                        <div class="flex items-center justify-between pt-2 border-t border-m3-outline/5 mt-auto">
+                            <a href="${art.link}" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-xs text-m3-primary font-semibold hover:underline">
+                                Read Article <span class="material-symbols-outlined text-sm">open_in_new</span>
+                            </a>
+                            
+                            <button onclick="toggleBookmark('${encodeURIComponent(JSON.stringify(art))}')" class="p-2.5 rounded-full hover:bg-m3-surfaceVariant/60 transition-colors ${isBookmarked ? 'text-m3-primary' : 'text-m3-onSurfaceVariant/70'}" title="${isBookmarked ? 'Remove bookmark' : 'Bookmark for later'}">
+                                <span class="material-symbols-outlined font-semibold fill-current">${isBookmarked ? 'bookmark' : 'bookmark_border'}</span>
+                            </button>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        // Bookmark toggle capability
+        function toggleBookmark(artEncoded) {
+            const article = JSON.parse(decodeURIComponent(artEncoded));
+            const existingIdx = bookmarkedArticles.findIndex(b => b.link === article.link);
+
+            if (existingIdx > -1) {
+                bookmarkedArticles.splice(existingIdx, 1);
+            } else {
+                bookmarkedArticles.push(article);
+            }
+
+            saveBookmarks();
+            renderArticles();
+        }
+
+        // Manual controls
+        function searchArticles() {
+            searchQuery = document.getElementById('article-search').value;
+            renderArticles();
+        }
+
+        function changeSortOrder() {
+            currentSort = document.getElementById('sort-selector').value;
+            renderArticles();
+        }
+
+        function refreshCurrentFeeds() {
+            fetchAllFeedArticles();
+        }
+
+        // Settings / Modal actions
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.remove('hidden');
+            
+            if (id === 'manage-feeds-modal') {
+                renderManageFeedsList();
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // Set preset trigger within Add Feed form modal
+        function setPresetFeed(url, name) {
+            document.getElementById('feed-url-input').value = url;
+            document.getElementById('feed-name-input').value = name;
+        }
+
+        // Handle Form Submission of feed subscription addition
+        function handleAddFeedSubmit(e) {
+            e.preventDefault();
+            const urlInput = document.getElementById('feed-url-input');
+            const nameInput = document.getElementById('feed-name-input');
+            
+            const rawUrl = urlInput.value.trim();
+            const rawName = nameInput.value.trim();
+
+            if (!rawUrl) return;
+
+            // Generate simple ID
+            const newId = `feed-${Date.now()}`;
+            const finalName = rawName || parseSimpleDomainName(rawUrl) || 'Custom Feed';
+
+            subscriptions.push({
+                id: newId,
+                name: finalName,
+                url: rawUrl
+            });
+
+            saveSubscriptions();
+            closeModal('add-feed-modal');
+            
+            // Reset fields
+            urlInput.value = '';
+            nameInput.value = '';
+
+            // Automatically select & view newly configured RSS subscription feed
+            filterBySource(newId);
+            fetchAllFeedArticles();
+        }
+
+        function renderManageFeedsList() {
+            const container = document.getElementById('manage-feeds-list');
+            if (subscriptions.length === 0) {
+                container.innerHTML = `<p class="text-center text-sm py-4 text-m3-onSurfaceVariant/50">You have zero feed subscriptions configured.</p>`;
+                return;
+            }
+
+            container.innerHTML = subscriptions.map(feed => {
+                return `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-m3-surfaceContainerHighest/70 gap-2 border border-m3-outline/10 text-xs">
+                        <div class="space-y-0.5 truncate max-w-sm">
+                            <div class="font-bold text-m3-onSurface">${feed.name}</div>
+                            <div class="text-m3-onSurfaceVariant/70 truncate">${feed.url}</div>
+                        </div>
+                        <button onclick="removeFeed('${feed.id}')" class="px-3 py-1.5 rounded-lg bg-m3-error/10 hover:bg-m3-error/20 text-m3-error font-medium transition-colors text-right self-end sm:self-center">
+                            Delete
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function removeFeed(id) {
+            subscriptions = subscriptions.filter(f => f.id !== id);
+            saveSubscriptions();
+            renderManageFeedsList();
+            
+            if (activeFilter === id) {
+                activeFilter = 'all';
+            }
+            fetchAllFeedArticles();
+        }
+
+        function confirmRemoveFeed(id) {
+            const target = subscriptions.find(f => f.id === id);
+            if (!target) return;
+            
+            showCustomDialog("Delete Subscription", `Are you sure you want to delete ${target.name}?`, () => {
+                removeFeed(id);
+            });
+        }
+
+        function restoreDefaults() {
+            showCustomDialog("Restore Defaults", "This will revert your subscription list to standard Hacker News, NYT & The Verge presets. Proceed?", () => {
+                subscriptions = [...DEFAULT_FEEDS];
+                saveSubscriptions();
+                closeModal('manage-feeds-modal');
+                filterBySource('all');
+                fetchAllFeedArticles();
+            });
+        }
+
+        function updateProxySetting() {
+            selectedProxy = document.getElementById('proxy-selector').value;
+            setCookie('m3_rss_proxy', selectedProxy);
+            fetchAllFeedArticles();
+        }
+
+
+        // Skeleton Loader view control
+        function showLoadingSkeleton() {
+            const container = document.getElementById('articles-container');
+            container.innerHTML = `
+                <div class="shimmer-card h-64 bg-m3-surfaceContainer rounded-3xl border border-m3-outline/10 p-5 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="shimmer-bg h-4 w-1/4 rounded"></div>
+                        <div class="shimmer-bg h-6 w-3/4 rounded"></div>
+                        <div class="shimmer-bg h-4 w-full rounded"></div>
+                        <div class="shimmer-bg h-4 w-5/6 rounded"></div>
+                    </div>
+                    <div class="shimmer-bg h-10 w-full rounded-xl mt-4"></div>
+                </div>
+                <div class="shimmer-card h-64 bg-m3-surfaceContainer rounded-3xl border border-m3-outline/10 p-5 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="shimmer-bg h-4 w-1/3 rounded"></div>
+                        <div class="shimmer-bg h-6 w-2/3 rounded"></div>
+                        <div class="shimmer-bg h-4 w-full rounded"></div>
+                        <div class="shimmer-bg h-4 w-4/5 rounded"></div>
+                    </div>
+                    <div class="shimmer-bg h-10 w-full rounded-xl mt-4"></div>
+                </div>
+            `;
+            document.getElementById('empty-state').classList.add('hidden');
+        }
+
+        function hideLoadingSkeleton() {
+            // Loading handling complete
+        }
+
+
+        // Utility Helpers
+        function parseSimpleDomainName(url) {
+            try {
+                const parsed = new URL(url);
+                return parsed.hostname.replace('www.', '');
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function cleanHtmlString(htmlStr) {
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = htmlStr;
+            const textContent = tempDiv.textContent || tempDiv.innerText || "";
+            return textContent.substring(0, 180).trim() + (textContent.length > 180 ? '...' : '');
+        }
+
+        function hashCode(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return Math.abs(hash);
+        }
+
+        // Return high quality abstract visual fallbacks based on article text hash values
+        function getRandomImageFallback(title) {
+            const index = hashCode(title) % 10;
+            return `https://images.unsplash.com/photo-${getFallbackImageId(index)}?auto=format&fit=crop&w=600&q=80`;
+        }
+
+        function getFallbackImageId(index) {
+            const ids = [
+                '1618005182384-a83a8bd57fbe', // Abstract dark art
+                '1579546929518-9e396f3cc809', // Neon gradients
+                '1550751827-4bd374c3f58b', // Grid interface cyber
+                '1526374965328-7f61d4dc18c5', // Tech circuit code
+                '1518770660439-4636190af475', // Hardware abstract
+                '1451187580459-43490279c0fa', // Cosmos deep space
+                '1614064641938-3bbee52942c7', // Minimal curves
+                '1504639725590-34d0984388bd', // Soft blur interface
+                '1607604276583-eef5d076aa5f', // Deep retro cyber
+                '1557683316-973673baf926'  // Sunset fluid art
+            ];
+            return ids[index];
+        }
+
+
+        // Custom Dialog management to replace default unpolished window system alerts
+        let dialogConfirmCallback = null;
+
+        function showCustomDialog(title, msg, onConfirm) {
+            document.getElementById('dialog-title').textContent = title;
+            document.getElementById('dialog-message').textContent = msg;
+            dialogConfirmCallback = onConfirm;
+            document.getElementById('custom-dialog').classList.remove('hidden');
+        }
+
+        function closeDialog() {
+            document.getElementById('custom-dialog').classList.add('hidden');
+            if (dialogConfirmCallback) {
+                dialogConfirmCallback();
+                dialogConfirmCallback = null;
+            }
+        }
+    </script>
+</body>
+</html>
