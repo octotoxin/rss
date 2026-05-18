@@ -6,6 +6,8 @@
     <title>Chronicle</title>
     <!-- Dynamic Purple RSS Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23D0BCFF'%3E%3Ccircle cx='6.18' cy='17.82' r='2.18'/%3E%3Cpath d='M4 4.44v2.83c7.03 0 12.73 5.7 12.73 12.73h2.83c0-8.59-6.97-15.56-15.56-15.56zm0 5.66v2.83c3.9 0 7.07 3.17 7.07 7.07h2.83c0-5.47-4.43-9.9-9.9-9.9z'/%3E%3C/svg%3E">
+    <!-- Web App Manifest Link for PWA capabilities -->
+    <link rel="manifest" href="manifest.json">
     <!-- Import Google Sans Flex, Inter, Orbitron (Gamer Font), and Material Symbols -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -162,8 +164,14 @@
         </div>
 
         <div class="flex items-center gap-2">
+            <!-- Offline Status Indicator -->
+            <div id="status-badge" class="hidden items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-300">
+                <span id="status-icon" class="material-symbols-outlined text-sm">cloud_done</span>
+                <span id="status-text">Online</span>
+            </div>
+            
             <!-- Unified Feeds Management Button -->
-            <button onclick="openModal('manage-feeds-modal')" class="m3-btn font-gamer flex items-center gap-2 bg-m3-primary text-m3-onPrimary hover:bg-m3-primary/90 px-4 py-2 rounded-full text-xs font-bold tracking-wide shadow-lg hover:shadow-xl">
+            <button id="feeds-hub-btn" onclick="openModal('manage-feeds-modal')" class="m3-btn font-gamer flex items-center gap-2 bg-m3-primary text-m3-onPrimary hover:bg-m3-primary/90 px-4 py-2 rounded-full text-xs font-bold tracking-wide shadow-lg hover:shadow-xl">
                 <span class="material-symbols-outlined text-base">dynamic_feed</span>
                 <span>FEEDS</span>
             </button>
@@ -183,7 +191,7 @@
                     <input type="text" id="article-search" oninput="searchArticles()" placeholder="Search articles by title, content or feed name..." class="w-full bg-m3-surfaceContainerLowest text-m3-onSurface pl-12 pr-4 py-3 rounded-2xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary placeholder-m3-onSurfaceVariant/50 text-sm transition-all">
                 </div>
                 <div class="flex items-center gap-2 justify-end">
-                    <button onclick="refreshCurrentFeeds()" class="m3-btn flex items-center justify-center gap-2 bg-m3-secondaryContainer text-m3-onSecondaryContainer hover:bg-m3-secondaryContainer/80 p-3 md:px-4 rounded-2xl text-sm font-medium" title="Refresh Feed">
+                    <button id="refresh-btn" onclick="refreshCurrentFeeds()" class="m3-btn flex items-center justify-center gap-2 bg-m3-secondaryContainer text-m3-onSecondaryContainer hover:bg-m3-secondaryContainer/80 p-3 md:px-4 rounded-2xl text-sm font-medium" title="Refresh Feed">
                         <span class="material-symbols-outlined">refresh</span>
                         <span class="hidden md:inline">Refresh</span>
                     </button>
@@ -401,16 +409,64 @@
         let selectedProxy = 'rss2json';
         let editingFeedId = null; // Track current feed id in Edit Mode
 
+        // Register the Service Worker relative to current base path to handle GitHub Pages subfolders
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Find correct root path on GitHub Pages
+                const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                navigator.serviceWorker.register(`${basePath}sw.js`)
+                    .then((reg) => console.log('Service Worker registered successfully!', reg.scope))
+                    .catch((err) => console.error('Service Worker registration failed:', err));
+            });
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             initStorageAndLoad();
             updateBookmarkBadge();
+            initOnlineStatusHandler();
         });
+
+        // Offline / Online Status Manager
+        function initOnlineStatusHandler() {
+            function updateOnlineStatus() {
+                const badge = document.getElementById('status-badge');
+                const icon = document.getElementById('status-icon');
+                const text = document.getElementById('status-text');
+                const refreshBtn = document.getElementById('refresh-btn');
+                const feedsBtn = document.getElementById('feeds-hub-btn');
+
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+
+                if (navigator.onLine) {
+                    badge.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-green-500/20 bg-green-500/10 text-green-400";
+                    icon.textContent = "cloud_done";
+                    text.textContent = "Online";
+                    if (refreshBtn) refreshBtn.disabled = false;
+                    if (feedsBtn) feedsBtn.disabled = false;
+                } else {
+                    badge.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border border-amber-500/20 bg-amber-500/10 text-amber-400 animate-pulse";
+                    icon.textContent = "cloud_off";
+                    text.textContent = "Offline Mode";
+                    if (refreshBtn) refreshBtn.disabled = true;
+                    // Optional: gracefully block adding feeds in offline mode
+                }
+            }
+
+            window.addEventListener('online', () => {
+                updateOnlineStatus();
+                fetchAllFeedArticles(); // Refresh feed automatically once connection is restored
+            });
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
+        }
 
         // Initialize from local storage
         function initStorageAndLoad() {
             const savedFeedsRaw = localStorage.getItem('m3_rss_subscriptions');
             const savedProxy = localStorage.getItem('m3_rss_proxy');
             const savedBookmarksRaw = localStorage.getItem('m3_rss_bookmarks');
+            const cachedArticlesRaw = localStorage.getItem('m3_rss_articles_cache');
 
             if (savedProxy) {
                 selectedProxy = savedProxy;
@@ -437,6 +493,15 @@
                 }
             }
 
+            // Load last active fetched articles cache if user is completely offline on load
+            if (cachedArticlesRaw) {
+                try {
+                    allArticles = JSON.parse(cachedArticlesRaw);
+                } catch(e) {
+                    allArticles = [];
+                }
+            }
+
             renderSidebarFeeds();
             fetchAllFeedArticles();
         }
@@ -449,6 +514,10 @@
         function saveBookmarks() {
             localStorage.setItem('m3_rss_bookmarks', JSON.stringify(bookmarkedArticles));
             updateBookmarkBadge();
+        }
+
+        function saveArticlesCache() {
+            localStorage.setItem('m3_rss_articles_cache', JSON.stringify(allArticles));
         }
 
         // Render feed icon logic supporting Emoji or Image Url
@@ -635,6 +704,12 @@
         }
 
         async function fetchAllFeedArticles() {
+            // If offline, bypass network call completely and immediately show cached elements
+            if (!navigator.onLine) {
+                renderArticles();
+                return;
+            }
+
             showLoadingSkeleton();
             allArticles = [];
             if (subscriptions.length === 0) {
@@ -691,6 +766,7 @@
 
             const results = await Promise.all(promises);
             allArticles = results.flat();
+            saveArticlesCache(); // Save to local storage cache so articles load when offline
             renderArticles();
         }
 
@@ -838,13 +914,12 @@
             }).join('');
         }
 
-        // FIXED: Generates a beautiful Settings view page directly inside the articles column area with Orbitron ONLY on the top heading
+        // Generates settings view with Orbitron only on main heading
         function renderSettingsPage(container) {
             container.className = "flex flex-col gap-6 w-full max-w-3xl mx-auto";
             container.innerHTML = `
                 <div class="bg-m3-surfaceContainer rounded-[28px] border border-m3-outline/10 p-6 md:p-8 flex flex-col gap-6 font-sans">
                     <div>
-                        <!-- Keep Orbitron gamer font ONLY on the main title below -->
                         <h2 class="text-xl md:text-2xl font-gamer font-bold text-m3-primary tracking-wide mb-2 flex items-center gap-3">
                             <span class="material-symbols-outlined text-2xl">settings</span>
                             <span>READER SETTINGS</span>
@@ -854,7 +929,7 @@
 
                     <hr class="border-m3-outline/10">
 
-                    <!-- CORS proxy section (Uses clean font-sans) -->
+                    <!-- CORS proxy section -->
                     <div class="space-y-3">
                         <label for="settings-proxy-selector" class="block text-xs font-bold text-m3-onSurfaceVariant uppercase tracking-wide">CORS Proxy Mode</label>
                         <select id="settings-proxy-selector" onchange="updateProxySettingFromPage()" class="bg-m3-surfaceContainerHighest text-m3-onSurface rounded-xl p-3.5 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer w-full text-sm font-sans">
@@ -869,7 +944,7 @@
 
                     <hr class="border-m3-outline/10">
 
-                    <!-- Export/Import backup options (Uses clean font-sans) -->
+                    <!-- Export/Import backup options -->
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold text-m3-onSurfaceVariant uppercase tracking-wide">Backup & Portability Schema</h4>
                         <p class="text-xs text-m3-onSurfaceVariant/80">Your custom channels and bookmarked articles are saved to your browser's LocalStorage. You can export them to a file for backup or migrating to another browser.</p>
@@ -887,7 +962,7 @@
 
                     <hr class="border-m3-outline/10">
 
-                    <!-- System reset block (Uses clean font-sans) -->
+                    <!-- System reset block -->
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold text-m3-error uppercase tracking-wide">Danger Zone</h4>
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-m3-errorContainer/10 border border-m3-error/20">
@@ -1058,6 +1133,7 @@
             }
         }
 
+        // Trigger file import securely
         function triggerImport() {
             const fileInput = document.getElementById('settings-import-file-input');
             if (fileInput) {
