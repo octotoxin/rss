@@ -195,7 +195,7 @@
                         <span class="material-symbols-outlined">refresh</span>
                         <span class="hidden md:inline">Refresh</span>
                     </button>
-                    <select id="sort-selector" onchange="changeSortOrder()" class="appearance-none bg-m3-surfaceContainerLowest text-m3-onSurface text-sm rounded-2xl pl-4 pr-10 py-3 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer bg-no-repeat" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23E6E1E5%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%226 9 12 15 18 9%22%3E%3C/polyline%3E%3C/svg%3E'); background-position: right 0.75rem center; background-size: 1.2rem;">
+                    <select id="sort-selector" onchange="changeSortOrder()" class="appearance-none bg-m3-surfaceContainerLowest text-m3-onSurface text-sm rounded-2xl pl-4 pr-10 py-3 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer bg-no-repeat" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23E6E1E5%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%226 9 12 15 18 9%22/%3E%3C/svg%3E'); background-position: right 0.75rem center; background-size: 1.2rem; background-repeat: no-repeat;">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                         <option value="title">Alphabetical (A-Z)</option>
@@ -688,8 +688,33 @@
             throw new Error("All proxy chains failed.");
         }
 
-        // Extremely robust extraction method to bypass 1x1 feedburner tracking pixels that cause blank gaps
-        function extractArticleImage(item, isXml = true) {
+        // Resolves potential relative path references safely into absolute URLs
+        function makeAbsoluteUrl(url, baseUrl) {
+            if (!url) return '';
+            try {
+                return new URL(url, baseUrl).href;
+            } catch (e) {
+                return url;
+            }
+        }
+
+        // Processes custom responsive HTML srcset blocks and selects the highest version URL
+        function parseSrcset(srcsetStr) {
+            if (!srcsetStr) return '';
+            const candidates = srcsetStr.split(',').map(item => item.trim().split(/\s+/));
+            if (candidates.length > 0) {
+                candidates.sort((a, b) => {
+                    const widthA = a[1] ? parseInt(a[1].replace(/w$/, ''), 10) : 0;
+                    const widthB = b[1] ? parseInt(b[1].replace(/w$/, ''), 10) : 0;
+                    return widthB - widthA; 
+                });
+                return candidates[0][0]; 
+            }
+            return '';
+        }
+
+        // Extremely robust extraction method to bypass 1x1 tracking elements and parse srcset structures
+        function extractArticleImage(item, isXml = true, feedUrl = '') {
             const isBadImage = (url) => {
                 if (!url) return true;
                 url = url.toLowerCase();
@@ -699,20 +724,59 @@
                 if (url.includes('api.tweetmeme.com')) return true;
                 if (url.includes('statcounter.com')) return true;
                 if (url.includes('feedsportal.com')) return true;
+                if (url.includes('doubleclick')) return true;
                 return false;
             };
 
-            const extractFromHtml = (htmlStr) => {
+            const extractFromHtml = (htmlStr, baseUrl) => {
                 if (!htmlStr) return '';
-                const matchAll = htmlStr.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*>/gi);
-                for (const match of matchAll) {
-                    const fullTag = match[0].toLowerCase();
-                    const src = match[1];
-                    // Skip 1x1 or visually hidden invisible pixels
-                    if (fullTag.includes('width="1"') || fullTag.includes('height="1"')) continue;
-                    if (isBadImage(src)) continue;
-                    return src;
+                
+                // Parse Picture tags first
+                const sourceMatch = htmlStr.match(/<source[^>]+srcset=["']([^"']+)["']/i);
+                if (sourceMatch) {
+                    const srcUrl = parseSrcset(sourceMatch[1]);
+                    if (srcUrl && !isBadImage(srcUrl)) return makeAbsoluteUrl(srcUrl, baseUrl);
                 }
+
+                // Check general image elements
+                const matchAll = htmlStr.matchAll(/<img[^>]+>/gi);
+                for (const match of matchAll) {
+                    const tag = match[0];
+                    const fullTagLower = tag.toLowerCase();
+                    if (fullTagLower.includes('width="1"') || fullTagLower.includes('height="1"') || fullTagLower.includes('display:none') || fullTagLower.includes('display: none')) {
+                        continue;
+                    }
+                    
+                    let imgSrc = '';
+                    
+                    // Match responsive attributes first
+                    const srcsetMatch = tag.match(/(?:data-)?srcset=["']([^"']+)["']/i);
+                    if (srcsetMatch) {
+                        imgSrc = parseSrcset(srcsetMatch[1]);
+                    }
+                    
+                    if (!imgSrc) {
+                        const dataSrcMatch = tag.match(/(?:data-src|data-lazy-src|data-original|data-original-src)=["']([^"']+)["']/i);
+                        if (dataSrcMatch) imgSrc = dataSrcMatch[1];
+                    }
+                    
+                    if (!imgSrc) {
+                        const srcMatch = tag.match(/src=["']([^"']+)["']/i);
+                        if (srcMatch) imgSrc = srcMatch[1];
+                    }
+
+                    if (imgSrc && !isBadImage(imgSrc)) {
+                        return makeAbsoluteUrl(imgSrc, baseUrl);
+                    }
+                }
+
+                // Check inline backgrounds
+                const bgMatch = htmlStr.match(/background-image:\s*url\(['"]?([^'")]+)['"]?\)/i);
+                if (bgMatch) {
+                    const srcUrl = bgMatch[1];
+                    if (srcUrl && !isBadImage(srcUrl)) return makeAbsoluteUrl(srcUrl, baseUrl);
+                }
+
                 return '';
             };
 
@@ -723,8 +787,8 @@
                 }
                 if (isBadImage(image)) image = '';
 
-                if (!image && item.description) image = extractFromHtml(item.description);
-                if (!image && item.content) image = extractFromHtml(item.content);
+                if (!image && item.description) image = extractFromHtml(item.description, feedUrl);
+                if (!image && item.content) image = extractFromHtml(item.content, feedUrl);
                 return image;
             }
 
@@ -733,7 +797,7 @@
             for (const media of mediaContentList) {
                 const url = media.getAttribute('url');
                 if (url && !isBadImage(url)) {
-                    image = url;
+                    image = makeAbsoluteUrl(url, feedUrl);
                     break;
                 }
             }
@@ -742,14 +806,14 @@
                 const enclosure = item.getElementsByTagName('enclosure')[0];
                 if (enclosure && enclosure.getAttribute('type')?.startsWith('image')) {
                     const url = enclosure.getAttribute('url');
-                    if (url && !isBadImage(url)) image = url;
+                    if (url && !isBadImage(url)) image = makeAbsoluteUrl(url, feedUrl);
                 }
             }
 
             if (!image) {
                 const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
                 const description = item.getElementsByTagName('description')[0]?.textContent || '';
-                image = extractFromHtml(contentEncoded + description);
+                image = extractFromHtml(contentEncoded + description, feedUrl);
             }
 
             return image;
@@ -773,7 +837,7 @@
                     const result = await fetchFeed(feed.url);
                     if (result.type === 'json') {
                         return (result.data.items || []).map((item, i) => {
-                            const img = extractArticleImage(item, false);
+                            const img = extractArticleImage(item, false, feed.url);
                             const rawContent = item.content || item.description || '';
                             return {
                                 id: `${feed.id}-${i}-${hashCode(item.title || '')}`,
@@ -802,7 +866,7 @@
                             const descriptionTag = items[i].getElementsByTagName('description')[0]?.textContent || '';
                             const fullContent = contentEncoded || descriptionTag;
 
-                            const img = extractArticleImage(items[i], true);
+                            const img = extractArticleImage(items[i], true, feed.url);
                             parsed.push({
                                 id: `${feed.id}-${i}-${hashCode(title)}`,
                                 feedId: feed.id,
@@ -838,12 +902,10 @@
         // Super robust error handler that will gracefully fallback and perfectly hide wrappers that break
         function handleImageError(img, originalSrc) {
             if (img.src !== originalSrc && !img.dataset.fallbackTried) {
-                // If proxy fails, try the raw URL once before giving up
                 img.dataset.fallbackTried = "true";
                 img.removeAttribute('crossorigin');
                 img.src = originalSrc;
             } else {
-                // Completely remove the image container so the card neatly collapses to text-only mode
                 if (img.parentElement && img.parentElement.classList.contains('image-container-wrapper')) {
                     img.parentElement.style.display = 'none';
                 }
@@ -862,7 +924,6 @@
                 
                 let r = 0, g = 0, b = 0, count = 0;
                 for (let i = 0; i < data.length; i += 4) {
-                    // Ignore completely transparent pixels
                     if (data[i+3] < 128) continue;
                     r += data[i];
                     g += data[i+1];
@@ -893,7 +954,7 @@
                     card.style.boxShadow = `0 12px 24px rgba(${r}, ${g}, ${b}, 0.08)`;
                 }
             } catch (e) {
-                // Soft fail if CORS blocks the canvas read
+                // Soft fail
             }
         }
 
