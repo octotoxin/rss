@@ -261,8 +261,9 @@
                     <span id="feed-count" class="text-[10px] font-gamer bg-m3-secondaryContainer text-m3-onSecondaryContainer px-2 py-0.5 rounded-full font-bold">0</span>
                 </div>
 
-                <div class="flex flex-col gap-1 overflow-y-auto max-h-[300px] lg:max-h-[500px]" id="sidebar-feeds-list">
-                    <div class="text-sm text-m3-onSurfaceVariant/60 italic p-4 text-center">No feeds added yet.</div>
+                <!-- Feed Groups & List Container -->
+                <div class="flex flex-col gap-1 overflow-y-auto max-h-[400px] lg:max-h-[600px]" id="sidebar-feeds-list">
+                    <!-- Folders and feeds rendered dynamically -->
                 </div>
                 
                 <hr class="border-m3-outline/10">
@@ -299,13 +300,14 @@
 
     <!-- COMBINED FEEDS MANAGEMENT MODAL -->
     <div id="manage-feeds-modal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 hidden backdrop-blur-xs">
-        <div class="bg-m3-surface rounded-[28px] max-w-4xl w-full p-6 md:p-8 shadow-2xl border border-m3-outline/20 flex flex-col max-h-[90vh]">
+        <div class="bg-m3-surface rounded-[28px] max-w-5xl w-full p-6 md:p-8 shadow-2xl border border-m3-outline/20 flex flex-col max-h-[90vh]">
             
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
                     <div class="p-2 bg-m3-primaryContainer text-m3-onPrimaryContainer rounded-xl">
                         <span class="material-symbols-outlined">settings_suggest</span>
                     </div>
+                    <!-- KEEPING ORBITRON ONLY ON THE MAIN HEADER TITLE -->
                     <h3 class="text-xl font-gamer font-bold tracking-tight text-m3-onBackground">FEEDS CONTROL HUB</h3>
                 </div>
                 <button onclick="closeModal('manage-feeds-modal')" class="text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/40 p-2 rounded-full flex items-center justify-center">
@@ -313,31 +315,47 @@
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto pr-1 flex-grow">
-                <div class="space-y-6">
+            <!-- Two Column Layout in Modal (using system/standard font-sans everywhere) -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 overflow-y-auto pr-1 flex-grow font-sans text-m3-onBackground">
+                
+                <!-- Left Column: Add/Edit Subscription -->
+                <div class="lg:col-span-2 space-y-6">
                     <div class="bg-m3-surfaceContainerLow p-5 rounded-2xl border border-m3-outline/10">
-                        <h4 id="form-heading" class="text-xs font-gamer font-bold text-m3-primary uppercase tracking-wide mb-4">Subscribe to a new Feed</h4>
+                        <h4 id="form-heading" class="text-xs font-bold text-m3-primary uppercase tracking-wide mb-4">Subscribe to a new Feed</h4>
                         
                         <form onsubmit="handleAddFeedSubmit(event)" class="space-y-4">
                             <div>
-                                <label for="feed-url-input" class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1">Feed XML/RSS URL</label>
+                                <label for="feed-url-input" class="block text-[10px] font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1">Feed XML/RSS URL</label>
                                 <input type="url" id="feed-url-input" required placeholder="https://www.androidpolice.com/feed/" class="w-full bg-m3-surfaceContainerHighest text-m3-onSurface px-4 py-2.5 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary text-sm">
                             </div>
                             <div>
-                                <label for="feed-name-input" class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1">Display Name</label>
+                                <label for="feed-name-input" class="block text-[10px] font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1">Display Name</label>
                                 <input type="text" id="feed-name-input" required placeholder="Android Police" class="w-full bg-m3-surfaceContainerHighest text-m3-onSurface px-4 py-2.5 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary text-sm">
                             </div>
+                            
+                            <!-- Folder Selection Field -->
                             <div>
-                                <label for="feed-icon-input" class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1">Custom Icon / Emoji (Optional)</label>
+                                <label for="feed-folder-input" class="block text-[10px] font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1">Folder / Group (Optional)</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <select id="feed-folder-select" onchange="toggleNewFolderField()" class="bg-m3-surfaceContainerHighest text-m3-onSurface rounded-xl p-2.5 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary text-xs">
+                                        <option value="">(No Folder)</option>
+                                        <option value="__NEW__">+ New Folder...</option>
+                                    </select>
+                                    <input type="text" id="feed-folder-new" placeholder="New Folder Name" class="hidden bg-m3-surfaceContainerHighest text-m3-onSurface px-3 py-2.5 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary text-xs">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="feed-icon-input" class="block text-[10px] font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1">Custom Icon / Emoji (Optional)</label>
                                 <input type="text" id="feed-icon-input" placeholder="🤖 or a custom image URL link" class="w-full bg-m3-surfaceContainerHighest text-m3-onSurface px-4 py-2.5 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary text-sm">
                             </div>
                             
                             <div>
-                                <span class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1.5">Quick Presets</span>
+                                <span class="block text-[10px] font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1.5">Quick Presets</span>
                                 <div class="flex flex-wrap gap-1.5">
-                                    <button type="button" onclick="setPresetFeed('https://www.androidpolice.com/feed/', 'Android Police', '🤖')" class="px-2.5 py-1 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10">Android Police</button>
-                                    <button type="button" onclick="setPresetFeed('https://9to5google.com/feed/', '9to5Google', '📱')" class="px-2.5 py-1 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10">9to5Google</button>
-                                    <button type="button" onclick="setPresetFeed('https://news.ycombinator.com/rss', 'Hacker News', '💻')" class="px-2.5 py-1 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10">Hacker News</button>
+                                    <button type="button" onclick="setPresetFeed('https://www.androidpolice.com/feed/', 'Android Police', '🤖', 'Android')" class="px-2.5 py-1 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10">Android Police</button>
+                                    <button type="button" onclick="setPresetFeed('https://9to5google.com/feed/', '9to5Google', '📱', 'Android')" class="px-2.5 py-1 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10">9to5Google</button>
+                                    <button type="button" onclick="setPresetFeed('https://news.ycombinator.com/rss', 'Hacker News', '💻', 'General')" class="px-2.5 py-1 text-xs bg-m3-surfaceContainerHighest hover:bg-m3-primaryContainer text-m3-onSurface rounded-full border border-m3-outline/10">Hacker News</button>
                                 </div>
                             </div>
                             
@@ -354,14 +372,15 @@
                     </div>
                 </div>
 
-                <div class="flex flex-col h-full space-y-4">
-                    <h4 class="text-xs font-gamer font-bold text-m3-primary uppercase tracking-wide">Configure Channels</h4>
-                    <div class="flex-grow overflow-y-auto border border-m3-outline/10 rounded-2xl bg-m3-surfaceContainerLow p-3 space-y-2 min-h-[250px] max-h-[380px]" id="manage-feeds-list"></div>
+                <!-- Right Column: List & Actions -->
+                <div class="lg:col-span-3 flex flex-col h-full space-y-4">
+                    <h4 class="text-xs font-bold text-m3-primary uppercase tracking-wide">Configure Channels</h4>
+                    <div class="flex-grow overflow-y-auto border border-m3-outline/10 rounded-2xl bg-m3-surfaceContainerLow p-3 space-y-2 min-h-[250px] max-h-[420px]" id="manage-feeds-list"></div>
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-4 border-t border-m3-outline/10 font-gamer">
-                <button onclick="closeModal('manage-feeds-modal')" class="px-6 py-2 bg-m3-primary text-m3-onPrimary rounded-full text-xs font-bold">CLOSE</button>
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-4 border-t border-m3-outline/10 font-sans">
+                <button onclick="closeModal('manage-feeds-modal')" class="px-6 py-2 bg-m3-primary text-m3-onPrimary rounded-full text-xs font-bold ml-auto">CLOSE</button>
             </div>
         </div>
     </div>
@@ -369,7 +388,7 @@
 
     <!-- CUSTOM ALERT MESSAGE DIALOG -->
     <div id="custom-dialog" class="fixed inset-0 bg-black/70 z-[110] flex items-center justify-center p-4 hidden">
-        <div class="bg-m3-surfaceContainerHighest rounded-[28px] max-w-sm w-full p-6 shadow-2xl border border-m3-outline/20">
+        <div class="bg-m3-surfaceContainerHighest rounded-[28px] max-w-sm w-full p-6 shadow-2xl border border-m3-outline/20 font-sans">
             <h4 id="dialog-title" class="text-lg font-bold text-m3-onBackground mb-2">Message</h4>
             <p id="dialog-message" class="text-sm text-m3-onSurfaceVariant/90 mb-6">Details...</p>
             <div class="flex justify-end">
@@ -384,13 +403,13 @@
             <div class="flex items-center justify-between p-6 border-b border-m3-outline/10">
                 <div class="flex items-center gap-3">
                     <span id="detail-feed-icon" class="w-8 h-8 rounded-full bg-m3-primaryContainer text-m3-onPrimaryContainer flex items-center justify-center text-sm"></span>
-                    <span id="detail-feed-name" class="text-xs font-gamer font-bold text-m3-primary uppercase tracking-wider">Feed Name</span>
+                    <span id="detail-feed-name" class="text-xs font-bold text-m3-primary uppercase tracking-wider font-sans">Feed Name</span>
                 </div>
                 <button onclick="closeModal('article-detail-modal')" class="text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/40 p-2 rounded-full flex items-center justify-center">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
-            <div class="overflow-y-auto p-6 flex flex-col gap-6">
+            <div class="overflow-y-auto p-6 flex flex-col gap-6 font-sans">
                 <div id="detail-image-container" class="w-full h-48 md:h-64 rounded-2xl overflow-hidden bg-m3-surfaceContainerLow hidden flex-shrink-0">
                     <img id="detail-image" src="" alt="Article Cover" class="w-full h-full object-cover">
                 </div>
@@ -400,7 +419,7 @@
                     <p id="detail-description" class="text-sm text-m3-onSurfaceVariant/90 leading-relaxed whitespace-pre-wrap"></p>
                 </div>
             </div>
-            <div class="p-6 border-t border-m3-outline/10 flex items-center justify-between mt-auto">
+            <div class="p-6 border-t border-m3-outline/10 flex items-center justify-between mt-auto font-sans">
                 <a id="detail-read-btn" href="#" target="_blank" rel="noopener noreferrer" class="m3-btn px-6 py-2.5 bg-m3-primary text-m3-onPrimary text-sm font-semibold rounded-full flex items-center gap-2 shadow-md">
                     Read Full Article <span class="material-symbols-outlined text-sm">open_in_new</span>
                 </a>
@@ -412,15 +431,14 @@
     </div>
 
 
-    <!-- JS LOGIC CORE (Fixed Hoisting References & Layout Parsing Loops) -->
+    <!-- JS LOGIC CORE (Fully Hoisted & Guarded) -->
     <script>
-        // --- 1. UTILITY PARSING FUNCTIONS (MUST BE LOADED FIRST BEFORE LOOPS CALL THEM) ---
+        // --- 1. UTILITY PARSING FUNCTIONS (Hoisted at Top) ---
         function getPlainText(str) {
             if (!str) return "";
             try {
                 const d = document.createElement("div"); 
                 d.innerHTML = str;
-                // Double protection for clean layout
                 return (d.textContent || d.innerText || "").replace(/[\r\n]+/g, "\n").trim();
             } catch(e) {
                 return String(str).replace(/<[^>]*>/g, '').trim();
@@ -444,10 +462,11 @@
             return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=500&q=80`; 
         }
 
+        // --- 2. STATE CONFIGURATION ---
         const DEFAULT_FEEDS = [
-            { id: "feed-1", name: "Hacker News", url: "https://news.ycombinator.com/rss", icon: "💻" },
-            { id: "feed-2", name: "NYT World", url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml", icon: "📰" },
-            { id: "feed-3", name: "The Verge", url: "https://www.theverge.com/rss/index.xml", icon: "📐" }
+            { id: "feed-1", name: "Hacker News", url: "https://news.ycombinator.com/rss", icon: "💻", folder: "General" },
+            { id: "feed-2", name: "NYT World", url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml", icon: "📰", folder: "News" },
+            { id: "feed-3", name: "The Verge", url: "https://www.theverge.com/rss/index.xml", icon: "📐", folder: "Tech" }
         ];
 
         let subscriptions = [];
@@ -459,8 +478,9 @@
         let searchQuery = '';
         let selectedProxy = 'rss2json';
         let editingFeedId = null; 
+        let collapsedFolders = {}; // Track expanded/collapsed folders in sidebar
 
-        // Service worker auto-update logic with controllerchange automatic reloads
+        // Service worker update lifecycle registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
@@ -487,7 +507,6 @@
             initOnlineStatusHandler();
         });
 
-        // Offline / Online Status Manager
         function initOnlineStatusHandler() {
             function updateOnlineStatus() {
                 const badge = document.getElementById('status-badge');
@@ -521,7 +540,6 @@
             updateOnlineStatus();
         }
 
-        // Initialize from local storage
         function initStorageAndLoad() {
             const savedFeedsRaw = localStorage.getItem('m3_rss_subscriptions');
             const savedProxy = localStorage.getItem('m3_rss_proxy');
@@ -579,7 +597,6 @@
             localStorage.setItem('m3_rss_articles_cache', JSON.stringify(allArticles));
         }
 
-        // Render feed icon logic supporting Emoji or Image Url
         function renderFeedIcon(icon, fallbackClass = "text-md") {
             if (!icon) {
                 return `<span class="material-symbols-outlined ${fallbackClass}">rss_feed</span>`;
@@ -588,6 +605,12 @@
                 return `<img src="${icon}" alt="" class="w-5 h-5 rounded-full object-cover inline-block" onerror="this.outerHTML='<span class=\\'material-symbols-outlined ${fallbackClass}\\'>rss_feed</span>'">`;
             }
             return `<span class="inline-block text-base leading-none text-center w-5">${icon}</span>`;
+        }
+
+        // --- 3. DYNAMIC FOLDER SIDEBAR RENDERER ---
+        function toggleFolderCollapse(folderName) {
+            collapsedFolders[folderName] = !collapsedFolders[folderName];
+            renderSidebarFeeds();
         }
 
         function renderSidebarFeeds() {
@@ -599,21 +622,74 @@
                 return;
             }
 
-            container.innerHTML = subscriptions.map(feed => {
-                const isActive = activeFilter === feed.id && !unreadFilterActive && activeFilter !== 'settings';
-                const activeClasses = isActive 
-                    ? 'bg-m3-secondaryContainer text-m3-onSecondaryContainer font-semibold' 
-                    : 'text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 hover:text-m3-onSurface';
+            // Group subscriptions by Folder
+            const grouped = {};
+            const ungrouped = [];
+
+            subscriptions.forEach(feed => {
+                if (feed.folder && feed.folder.trim() !== "") {
+                    const fName = feed.folder.trim();
+                    if (!grouped[fName]) grouped[fName] = [];
+                    grouped[fName].push(feed);
+                } else {
+                    ungrouped.push(feed);
+                }
+            });
+
+            let html = "";
+
+            // Render Folders
+            Object.keys(grouped).sort().forEach(folderName => {
+                const feeds = grouped[folderName];
+                const isCollapsed = !!collapsedFolders[folderName];
+                const chevronIcon = isCollapsed ? "chevron_right" : "expand_more";
                 
-                return `
-                    <div class="flex items-center gap-1 group w-full">
-                        <button onclick="filterBySource('${feed.id}')" class="flex items-center gap-3 flex-grow text-left p-2.5 rounded-2xl text-sm transition-all duration-150 ${activeClasses}">
-                            ${renderFeedIcon(feed.icon, "text-sm")}
-                            <span class="truncate max-w-[150px]">${feed.name}</span>
+                html += `
+                    <div class="flex flex-col gap-0.5 mb-1.5 border-l border-m3-outline/10 pl-2">
+                        <!-- Folder Header -->
+                        <button onclick="toggleFolderCollapse('${folderName}')" class="flex items-center justify-between text-left p-2 rounded-xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/20 transition-all font-sans font-bold text-xs uppercase tracking-wider w-full">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm text-m3-primary">folder_open</span>
+                                <span class="truncate max-w-[120px]">${folderName}</span>
+                            </div>
+                            <span class="material-symbols-outlined text-sm">${chevronIcon}</span>
                         </button>
+                        <!-- Folder Children -->
+                        <div class="flex flex-col gap-0.5 mt-0.5 ${isCollapsed ? 'hidden' : ''}">
+                `;
+
+                feeds.forEach(feed => {
+                    html += renderFeedSidebarButton(feed);
+                });
+
+                html += `
+                        </div>
                     </div>
                 `;
-            }).join('');
+            });
+
+            // Render Ungrouped Feeds
+            if (ungrouped.length > 0) {
+                ungrouped.forEach(feed => {
+                    html += renderFeedSidebarButton(feed);
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderFeedSidebarButton(feed) {
+            const isActive = activeFilter === feed.id && !unreadFilterActive && activeFilter !== 'settings';
+            const activeClasses = isActive 
+                ? 'bg-m3-secondaryContainer text-m3-onSecondaryContainer font-semibold' 
+                : 'text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 hover:text-m3-onSurface';
+            
+            return `
+                <button onclick="filterBySource('${feed.id}')" class="flex items-center gap-3 text-left p-2 rounded-xl text-xs transition-all duration-150 w-full ${activeClasses}">
+                    ${renderFeedIcon(feed.icon, "text-xs")}
+                    <span class="truncate max-w-[140px]">${feed.name}</span>
+                </button>
+            `;
         }
 
         function updateBookmarkBadge() {
@@ -623,7 +699,6 @@
         function filterBySource(sourceId) {
             unreadFilterActive = false;
             activeFilter = sourceId;
-            
             document.getElementById('feed-controls-bar').classList.remove('hidden');
 
             document.getElementById('filter-all-btn').className = sourceId === 'all' 
@@ -631,7 +706,6 @@
                 : "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150";
 
             document.getElementById('filter-unread-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1";
-            
             document.getElementById('filter-settings-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150 mt-1";
 
             renderSidebarFeeds();
@@ -641,7 +715,6 @@
         function toggleUnreadOnly() {
             unreadFilterActive = true;
             activeFilter = 'bookmarks';
-            
             document.getElementById('feed-controls-bar').classList.remove('hidden');
 
             document.getElementById('filter-all-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150";
@@ -655,7 +728,6 @@
         function toggleSettingsView() {
             unreadFilterActive = false;
             activeFilter = 'settings';
-
             document.getElementById('feed-controls-bar').classList.add('hidden');
 
             document.getElementById('filter-all-btn').className = "flex items-center gap-3 w-full text-left p-3 rounded-2xl text-m3-onSurfaceVariant hover:bg-m3-surfaceVariant/30 font-medium text-sm transition-all duration-150";
@@ -664,57 +736,6 @@
 
             renderSidebarFeeds();
             renderArticles();
-        }
-
-        async function fetchFeed(feedUrl) {
-            const chain = [];
-            if (selectedProxy === 'none') {
-                chain.push({ name: 'direct', fetcher: async () => {
-                    const r = await fetch(feedUrl);
-                    const t = await r.text();
-                    return { type: 'xml', data: t };
-                }});
-            } else {
-                const options = [
-                    {
-                        name: 'rss2json',
-                        fetcher: async () => {
-                            const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}&api_key=`);
-                            if (!r.ok) throw new Error();
-                            const json = await r.json();
-                            if (json.status !== 'ok') throw new Error();
-                            return { type: 'json', data: json };
-                        }
-                    },
-                    {
-                        name: 'corsproxy',
-                        fetcher: async () => {
-                            const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(feedUrl)}`);
-                            if (!r.ok) throw new Error();
-                            const t = await r.text();
-                            return { type: 'xml', data: t };
-                        }
-                    },
-                    {
-                        name: 'allorigins',
-                        fetcher: async () => {
-                            const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(feedUrl)}`);
-                            if (!r.ok) throw new Error();
-                            const json = await r.json();
-                            if (!json || !json.contents) throw new Error();
-                            const t = json.contents;
-                            return { type: 'xml', data: t };
-                        }
-                    }
-                ];
-                options.sort((a, b) => a.name === selectedProxy ? -1 : b.name === selectedProxy ? 1 : 0);
-                chain.push(...options);
-            }
-
-            for (const step of chain) {
-                try { return await step.fetcher(); } catch (e) {}
-            }
-            throw new Error("All proxy chains failed.");
         }
 
         // Resolves potential relative path references safely into absolute URLs
@@ -848,81 +869,7 @@
             return image;
         }
 
-        async function fetchAllFeedArticles() {
-            if (!navigator.onLine) {
-                renderArticles();
-                return;
-            }
-
-            showLoadingSkeleton();
-            allArticles = [];
-            if (subscriptions.length === 0) {
-                renderArticles();
-                return;
-            }
-
-            const promises = subscriptions.map(async (feed) => {
-                try {
-                    const result = await fetchFeed(feed.url);
-                    if (result.type === 'json') {
-                        return (result.data.items || []).map((item, i) => {
-                            const img = extractArticleImage(item, false, feed.url);
-                            const rawContent = item.content || item.description || '';
-                            return {
-                                id: `${feed.id}-${i}-${hashCode(item.title || '')}`,
-                                feedId: feed.id,
-                                feedName: feed.name,
-                                feedIcon: feed.icon || '',
-                                title: item.title || 'Untitled',
-                                link: item.link || '#',
-                                pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
-                                description: cleanHtmlString(rawContent),
-                                fullDescription: getPlainText(rawContent),
-                                image: img || '' 
-                            };
-                        });
-                    } else {
-                        const parser = new DOMParser();
-                        const xmlDoc = parser.parseFromString(result.data, "text/xml");
-                        const items = xmlDoc.getElementsByTagName('item');
-                        const parsed = [];
-                        for(let i=0; i < Math.min(items.length, 15); i++) {
-                            const title = items[i].getElementsByTagName('title')[0]?.textContent || 'Untitled';
-                            const link = items[i].getElementsByTagName('link')[0]?.textContent || '#';
-                            const pubDate = items[i].getElementsByTagName('pubDate')[0]?.textContent || '';
-                            
-                            const contentEncoded = items[i].getElementsByTagName('content:encoded')[0]?.textContent || '';
-                            const descriptionTag = items[i].getElementsByTagName('description')[0]?.textContent || '';
-                            const fullContent = contentEncoded || descriptionTag;
-
-                            const img = extractArticleImage(items[i], true, feed.url);
-                            parsed.push({
-                                id: `${feed.id}-${i}-${hashCode(title)}`,
-                                feedId: feed.id,
-                                feedName: feed.name,
-                                feedIcon: feed.icon || '',
-                                title, link,
-                                pubDate: pubDate ? new Date(pubDate) : new Date(),
-                                description: cleanHtmlString(fullContent),
-                                fullDescription: getPlainText(fullContent),
-                                image: img || '' 
-                            });
-                        }
-                        return parsed;
-                    }
-                } catch (err) {
-                    return [];
-                }
-            });
-
-            const results = await Promise.all(promises);
-            allArticles = results.flat();
-            saveArticlesCache(); 
-            renderArticles();
-        }
-
-        // Helper to convert URLs through a powerful image cache to fix hotlink/CORS breakage
-        // Using high-speed image processor caching proxy wsrv.nl
+        // High-speed caching image proxy
         function getProxiedImageUrl(url) {
             if (!url) return '';
             if (url.startsWith('data:') || url.includes('wsrv.nl')) return url;
@@ -1045,6 +992,12 @@
                 const uniqueCardId = `card-${art.id}`;
                 const safeTitle = art.title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 
+                // Formatted publication date + time (Required above image)
+                const dateOptions = { month: 'numeric', day: 'numeric', year: 'numeric' };
+                const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
+                const pubDateObj = new Date(art.pubDate);
+                const formattedDateTime = `${pubDateObj.toLocaleDateString(undefined, dateOptions)}, ${pubDateObj.toLocaleTimeString(undefined, timeOptions)}`;
+
                 return `
                     <article id="${uniqueCardId}" onclick="openArticleDetail('${art.id}')" class="m3-interactive-card bg-m3-surfaceContainer rounded-[24px] border border-m3-outline/10 p-5 flex flex-col justify-between h-full group overflow-hidden cursor-pointer">
                         <div>
@@ -1053,7 +1006,8 @@
                                     ${renderFeedIcon(art.feedIcon || subscriptions.find(s=>s.id===art.feedId)?.icon, "text-xs")}
                                     <span>${art.feedName}</span>
                                 </span>
-                                <span class="text-xs text-m3-onSurfaceVariant/60">${new Date(art.pubDate).toLocaleDateString()}</span>
+                                <!-- FIXED: Dynamic publication Time is now explicitly shown here -->
+                                <span class="text-xs text-m3-onSurfaceVariant/60 font-medium text-right">${formattedDateTime}</span>
                             </div>
                             
                             ${art.image ? `
@@ -1087,8 +1041,9 @@
         function renderSettingsPage(container) {
             container.className = "flex flex-col gap-6 w-full max-w-3xl mx-auto";
             container.innerHTML = `
-                <div class="bg-m3-surfaceContainer rounded-[28px] border border-m3-outline/10 p-6 md:p-8 flex flex-col gap-6 font-sans">
+                <div class="bg-m3-surfaceContainer rounded-[28px] border border-m3-outline/10 p-6 md:p-8 flex flex-col gap-6 font-sans text-m3-onBackground">
                     <div>
+                        <!-- Orbitron ONLY on main purple section heading as requested -->
                         <h2 class="text-xl md:text-2xl font-gamer font-bold text-m3-primary tracking-wide mb-2 flex items-center gap-3">
                             <span class="material-symbols-outlined text-2xl">settings</span>
                             <span>READER SETTINGS</span>
@@ -1132,7 +1087,7 @@
                     <div class="space-y-4">
                         <h4 class="text-xs font-bold text-m3-error uppercase tracking-wide">Danger Zone</h4>
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-m3-errorContainer/10 border border-m3-error/20">
-                            <p class="text-xs text-m3-onSurfaceVariant/80 max-w-md">Completely wipe all stored channels, feed modifications, custom icons, and bookmarked articles, and reset to defaults.</p>
+                            <p class="text-xs text-m3-onSurfaceVariant/80 max-w-md">Completely wipe all stored channels, folder groupings, custom icons, and bookmarked articles, and reset to defaults.</p>
                             <button onclick="restoreDefaults()" class="m3-btn px-5 py-2.5 bg-m3-error/20 text-m3-error hover:bg-m3-error/30 font-bold text-xs rounded-xl flex items-center gap-1.5 self-end sm:self-center font-sans">
                                 <span class="material-symbols-outlined text-sm">restart_alt</span> FACTORY RESET
                             </button>
@@ -1142,26 +1097,72 @@
             `;
         }
 
-        /* Essential System Control Hooks */
-        function searchArticles() { searchQuery = document.getElementById('article-search').value; renderArticles(); }
-        function changeSortOrder() { currentSort = document.getElementById('sort-selector').value; renderArticles(); }
-        function refreshCurrentFeeds() { fetchAllFeedArticles(); }
-        
-        // Modal management
-        function openModal(id) { 
-            document.getElementById(id).classList.remove('hidden'); 
-            if(id==='manage-feeds-modal') renderManageFeedsList(); 
+        // --- 4. FORM DROPDOWN MODIFIERS (Folder Management in Hub) ---
+        function populateFolderDropdown() {
+            const select = document.getElementById('feed-folder-select');
+            if (!select) return;
+
+            // Gather all current unique folder names in subscriptions
+            const folderNames = [...new Set(subscriptions.map(f => f.folder).filter(name => name && name.trim() !== ""))];
+
+            // Rebuild select options
+            let optionsHtml = `<option value="">(No Folder)</option>`;
+            folderNames.sort().forEach(folder => {
+                optionsHtml += `<option value="${folder}">${folder}</option>`;
+            });
+            optionsHtml += `<option value="__NEW__">+ Create New Folder...</option>`;
+            select.innerHTML = optionsHtml;
+            toggleNewFolderField();
         }
-        
-        document.closeModal = function(id) { document.getElementById(id).classList.add('hidden'); }; 
-        window.closeModal = document.closeModal;
-        
-        function setPresetFeed(url, name, icon) { 
+
+        function toggleNewFolderField() {
+            const select = document.getElementById('feed-folder-select');
+            const newField = document.getElementById('feed-folder-new');
+            if (!select || !newField) return;
+
+            if (select.value === '__NEW__') {
+                newField.classList.remove('hidden');
+                newField.required = true;
+            } else {
+                newField.classList.add('hidden');
+                newField.required = false;
+                newField.value = '';
+            }
+        }
+
+        function setPresetFeed(url, name, icon, folder) { 
             document.getElementById('feed-url-input').value = url; 
             document.getElementById('feed-name-input').value = name; 
             document.getElementById('feed-icon-input').value = icon || ''; 
+            
+            const select = document.getElementById('feed-folder-select');
+            if (select) {
+                // Setup presets matching target folder
+                const newField = document.getElementById('feed-folder-new');
+                let found = false;
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value === folder) {
+                        select.selectedIndex = i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    select.value = '__NEW__';
+                    if (newField) {
+                        newField.classList.remove('hidden');
+                        newField.value = folder;
+                        newField.required = true;
+                    }
+                } else {
+                    if (newField) {
+                        newField.classList.add('hidden');
+                        newField.value = '';
+                    }
+                }
+            }
         }
-        
+
         function startEditFeed(feedId) {
             const feed = subscriptions.find(f => f.id === feedId);
             if (!feed) return;
@@ -1171,6 +1172,34 @@
             document.getElementById('feed-name-input').value = feed.name;
             document.getElementById('feed-icon-input').value = feed.icon || '';
             
+            // Setup folder selection
+            populateFolderDropdown();
+            const select = document.getElementById('feed-folder-select');
+            const newField = document.getElementById('feed-folder-new');
+            if (select) {
+                const folderVal = feed.folder || '';
+                let hasOption = false;
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].value === folderVal) {
+                        select.value = folderVal;
+                        hasOption = true;
+                        break;
+                    }
+                }
+                if (!hasOption && folderVal !== '') {
+                    select.value = '__NEW__';
+                    if (newField) {
+                        newField.classList.remove('hidden');
+                        newField.value = folderVal;
+                    }
+                } else {
+                    if (newField) {
+                        newField.classList.add('hidden');
+                        newField.value = '';
+                    }
+                }
+            }
+
             document.getElementById('form-heading').textContent = "Edit Configured Feed";
             document.getElementById('form-submit-text').textContent = "Save Changes";
             document.getElementById('form-cancel-edit-btn').classList.remove('hidden');
@@ -1182,6 +1211,14 @@
             document.getElementById('feed-name-input').value = '';
             document.getElementById('feed-icon-input').value = '';
             
+            const select = document.getElementById('feed-folder-select');
+            if (select) select.value = '';
+            const newField = document.getElementById('feed-folder-new');
+            if (newField) {
+                newField.classList.add('hidden');
+                newField.value = '';
+            }
+
             document.getElementById('form-heading').textContent = "Subscribe to a new Feed";
             document.getElementById('form-submit-text').textContent = "Add Subscription";
             document.getElementById('form-cancel-edit-btn').classList.add('hidden');
@@ -1193,17 +1230,29 @@
             const name = document.getElementById('feed-name-input').value.trim() || 'Custom Feed';
             const icon = document.getElementById('feed-icon-input').value.trim() || '📰';
             
+            // Resolve Folder Group Name
+            const select = document.getElementById('feed-folder-select');
+            let folder = '';
+            if (select) {
+                if (select.value === '__NEW__') {
+                    folder = document.getElementById('feed-folder-new').value.trim();
+                } else {
+                    folder = select.value.trim();
+                }
+            }
+
             if (editingFeedId) {
                 const idx = subscriptions.findIndex(f => f.id === editingFeedId);
                 if (idx > -1) {
                     subscriptions[idx].url = url;
                     subscriptions[idx].name = name;
                     subscriptions[idx].icon = icon;
+                    subscriptions[idx].folder = folder;
                 }
                 cancelEditMode();
             } else {
                 const newId = `feed-${Date.now()}`;
-                subscriptions.push({ id: newId, name, url, icon });
+                subscriptions.push({ id: newId, name, url, icon, folder });
             }
             
             saveSubscriptions();
@@ -1224,13 +1273,16 @@
                             ${renderFeedIcon(f.icon, "text-sm")}
                         </div>
                         <div class="truncate">
-                            <div class="font-bold text-m3-onSurface">${f.name}</div>
+                            <div class="font-bold text-m3-onSurface flex items-center gap-1.5">
+                                <span>${f.name}</span>
+                                ${f.folder ? `<span class="bg-m3-secondaryContainer text-m3-onSecondaryContainer px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider font-sans">${f.folder}</span>` : ''}
+                            </div>
                             <div class="opacity-70 truncate max-w-[180px] sm:max-w-xs">${f.url}</div>
                         </div>
                     </div>
-                    <div class="flex gap-2 self-end sm:self-center font-sans">
-                        <button onclick="startEditFeed('${f.id}')" class="px-3 py-1.5 rounded-lg bg-m3-primary/10 text-m3-primary hover:bg-m3-primary/20 font-bold">Edit</button>
-                        <button onclick="confirmRemoveFeed('${f.id}')" class="px-3 py-1.5 rounded-lg bg-m3-error/10 text-m3-error hover:bg-m3-error/20 font-bold">Delete</button>
+                    <div class="flex gap-2 self-end sm:self-center">
+                        <button onclick="startEditFeed('${f.id}')" class="px-3 py-1.5 rounded-lg bg-m3-primary/10 text-m3-primary hover:bg-m3-primary/20 font-bold font-sans">Edit</button>
+                        <button onclick="confirmRemoveFeed('${f.id}')" class="px-3 py-1.5 rounded-lg bg-m3-error/10 text-m3-error hover:bg-m3-error/20 font-bold font-sans">Delete</button>
                     </div>
                 </div>
             `).join('');
@@ -1318,12 +1370,12 @@
             reader.readAsText(file);
         }
 
-        function showLoadingSkeleton() {
-            document.getElementById('articles-container').className = "grid grid-cols-1 md:grid-cols-2 gap-4";
-            document.getElementById('articles-container').innerHTML = `
-                <div class="shimmer-card h-48 bg-m3-surfaceContainer rounded-3xl p-5"><div class="shimmer-bg h-4 w-1/4 rounded mb-2"></div><div class="shimmer-bg h-6 w-3/4 rounded"></div></div>
-                <div class="shimmer-card h-48 bg-m3-surfaceContainer rounded-3xl p-5"><div class="shimmer-bg h-4 w-1/3 rounded mb-2"></div><div class="shimmer-bg h-6 w-2/3 rounded"></div></div>
-            `;
+        function openModal(id) { 
+            document.getElementById(id).classList.remove('hidden'); 
+            if(id==='manage-feeds-modal') {
+                populateFolderDropdown();
+                renderManageFeedsList(); 
+            }
         }
 
         function openArticleDetail(articleId) {
@@ -1335,7 +1387,7 @@
             document.getElementById('detail-title').textContent = article.title;
             
             document.getElementById('detail-date').textContent = new Date(article.pubDate).toLocaleDateString(undefined, {
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
             });
             
             document.getElementById('detail-description').textContent = article.fullDescription || article.description;
