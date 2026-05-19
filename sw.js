@@ -1,6 +1,6 @@
-const CACHE_NAME = 'chronicle-rss-v1';
+const CACHE_NAME = 'chronicle-rss-v3';
 
-// Dynamic Relative Asset Scoping Helper
+// Core local application assets to cache for offline load
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,7 +8,7 @@ const ASSETS_TO_CACHE = [
   './sw.js'
 ];
 
-// Install Event: open cache vault and store local files
+// Install Event: Cache local assets and skip waiting state immediately
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -17,7 +17,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate Event: sweep out older versions 
+// Activate Event: Clear out older caching versions and claim clients instantly
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
@@ -32,28 +32,31 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch Event: intercept connection and return resources
+// Fetch Event: Implement Network-First with Cache Fallback for local assets
 self.addEventListener('fetch', (event) => {
-  // Avoid intercepting third-party feeds and CORS calls directly
-  if (!event.request.url.startsWith(self.location.origin)) {
-    return;
+  const requestUrl = new URL(event.request.url);
+
+  // 1. Bypass Service Worker cache completely for external dynamic RSS feeds & JSON converter APIs
+  if (!requestUrl.origin.includes(self.location.hostname)) {
+    return; // Network-Only (Let browser handle it normally)
   }
 
+  // 2. Network-First strategy for local application assets (index.html, manifest, styles, icons, fonts)
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((response) => {
-        // Cache newly requested local icons or fonts dynamically
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
+    fetch(event.request)
+      .then((networkResponse) => {
+        // Save a clone of the fresh asset into cache
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
         }
-        return response;
-      });
-    })
+        return networkResponse;
+      })
+      .catch(() => {
+        // Fall back to cache if network is unavailable (offline mode)
+        return caches.match(event.request);
+      })
   );
 });
