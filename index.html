@@ -195,7 +195,7 @@
                         <span class="material-symbols-outlined">refresh</span>
                         <span class="hidden md:inline">Refresh</span>
                     </button>
-                    <select id="sort-selector" onchange="changeSortOrder()" class="appearance-none bg-m3-surfaceContainerLowest text-m3-onSurface text-sm rounded-2xl pl-4 pr-10 py-3 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer bg-no-repeat" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23E6E1E5%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%226 9 12 15 18 9%22/%3E%3C/svg%3E'); background-position: right 0.75rem center; background-size: 1.2rem; background-repeat: no-repeat;">
+                    <select id="sort-selector" onchange="changeSortOrder()" class="appearance-none bg-m3-surfaceContainerLowest text-m3-onSurface text-sm rounded-2xl pl-4 pr-10 py-3 border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary cursor-pointer" style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23E6E1E5%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%226 9 12 15 18 9%22/%3E%3C/svg%3E'); background-position: right 0.75rem center; background-size: 1.2rem; background-repeat: no-repeat;">
                         <option value="newest">Newest First</option>
                         <option value="oldest">Oldest First</option>
                         <option value="title">Alphabetical (A-Z)</option>
@@ -297,11 +297,10 @@
     </footer>
 
 
-    <!-- COMBINED FEEDS MANAGEMENT MODAL (ADD, EDIT, DELETE, IMPORT, EXPORT) -->
+    <!-- COMBINED FEEDS MANAGEMENT MODAL -->
     <div id="manage-feeds-modal" class="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 hidden backdrop-blur-xs">
         <div class="bg-m3-surface rounded-[28px] max-w-4xl w-full p-6 md:p-8 shadow-2xl border border-m3-outline/20 flex flex-col max-h-[90vh]">
             
-            <!-- Modal Header -->
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-3">
                     <div class="p-2 bg-m3-primaryContainer text-m3-onPrimaryContainer rounded-xl">
@@ -314,10 +313,7 @@
                 </button>
             </div>
 
-            <!-- Two Column Layout in Modal -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 overflow-y-auto pr-1 flex-grow">
-                
-                <!-- Left Column: Add/Edit Subscription -->
                 <div class="space-y-6">
                     <div class="bg-m3-surfaceContainerLow p-5 rounded-2xl border border-m3-outline/10">
                         <h4 id="form-heading" class="text-xs font-gamer font-bold text-m3-primary uppercase tracking-wide mb-4">Subscribe to a new Feed</h4>
@@ -336,7 +332,6 @@
                                 <input type="text" id="feed-icon-input" placeholder="🤖 or a custom image URL link" class="w-full bg-m3-surfaceContainerHighest text-m3-onSurface px-4 py-2.5 rounded-xl border border-m3-outline/20 focus:outline-none focus:ring-2 focus:ring-m3-primary text-sm">
                             </div>
                             
-                            <!-- Quick Presets -->
                             <div>
                                 <span class="block text-[10px] font-gamer font-bold text-m3-onSurfaceVariant uppercase tracking-wide mb-1.5">Quick Presets</span>
                                 <div class="flex flex-wrap gap-1.5">
@@ -359,22 +354,15 @@
                     </div>
                 </div>
 
-                <!-- Right Column: List & Actions -->
                 <div class="flex flex-col h-full space-y-4">
                     <h4 class="text-xs font-gamer font-bold text-m3-primary uppercase tracking-wide">Configure Channels</h4>
-                    
-                    <div class="flex-grow overflow-y-auto border border-m3-outline/10 rounded-2xl bg-m3-surfaceContainerLow p-3 space-y-2 min-h-[250px] max-h-[380px]" id="manage-feeds-list">
-                        <!-- dynamic subscription list with delete/edit actions -->
-                    </div>
+                    <div class="flex-grow overflow-y-auto border border-m3-outline/10 rounded-2xl bg-m3-surfaceContainerLow p-3 space-y-2 min-h-[250px] max-h-[380px]" id="manage-feeds-list"></div>
                 </div>
-
             </div>
 
-            <!-- Footer options -->
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-4 border-t border-m3-outline/10 font-gamer">
                 <button onclick="closeModal('manage-feeds-modal')" class="px-6 py-2 bg-m3-primary text-m3-onPrimary rounded-full text-xs font-bold">CLOSE</button>
             </div>
-
         </div>
     </div>
 
@@ -424,8 +412,38 @@
     </div>
 
 
-    <!-- JS LOGIC CORE -->
+    <!-- JS LOGIC CORE (Fixed Hoisting References & Layout Parsing Loops) -->
     <script>
+        // --- 1. UTILITY PARSING FUNCTIONS (MUST BE LOADED FIRST BEFORE LOOPS CALL THEM) ---
+        function getPlainText(str) {
+            if (!str) return "";
+            try {
+                const d = document.createElement("div"); 
+                d.innerHTML = str;
+                // Double protection for clean layout
+                return (d.textContent || d.innerText || "").replace(/[\r\n]+/g, "\n").trim();
+            } catch(e) {
+                return String(str).replace(/<[^>]*>/g, '').trim();
+            }
+        }
+
+        function cleanHtmlString(str) {
+            const txt = getPlainText(str);
+            return txt.substring(0, 140).trim() + (txt.length > 140 ? '...' : '');
+        }
+
+        function hashCode(s) { 
+            let h = 0; 
+            for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); 
+            return Math.abs(h); 
+        }
+        
+        function getRandomImageFallback(title) { 
+            const imageIds = ['1618005182384-a83a8bd57fbe','1579546929518-9e396f3cc809','1550751827-4bd374c3f58b','1526374965328-7f61d4dc18c5'];
+            const id = imageIds[hashCode(title) % imageIds.length];
+            return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=500&q=80`; 
+        }
+
         const DEFAULT_FEEDS = [
             { id: "feed-1", name: "Hacker News", url: "https://news.ycombinator.com/rss", icon: "💻" },
             { id: "feed-2", name: "NYT World", url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml", icon: "📰" },
@@ -442,14 +460,13 @@
         let selectedProxy = 'rss2json';
         let editingFeedId = null; 
 
-        // FIXED: Service worker auto-update logic with controllerchange automatic reloads
+        // Service worker auto-update logic with controllerchange automatic reloads
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
                 navigator.serviceWorker.register(`${basePath}sw.js`)
                     .then((reg) => {
                         console.log('Service Worker registered successfully!', reg.scope);
-                        // Silently ping the worker to look for newer deployments
                         reg.update();
                     })
                     .catch((err) => console.error('Service Worker registration failed:', err));
@@ -905,6 +922,7 @@
         }
 
         // Helper to convert URLs through a powerful image cache to fix hotlink/CORS breakage
+        // Using high-speed image processor caching proxy wsrv.nl
         function getProxiedImageUrl(url) {
             if (!url) return '';
             if (url.startsWith('data:') || url.includes('wsrv.nl')) return url;
@@ -1124,15 +1142,6 @@
             `;
         }
 
-        function toggleBookmark(artEncoded) {
-            const article = JSON.parse(decodeURIComponent(artEncoded));
-            const existingIdx = bookmarkedArticles.findIndex(b => b.link === article.link);
-            if (existingIdx > -1) bookmarkedArticles.splice(existingIdx, 1);
-            else bookmarkedArticles.push(article);
-            saveBookmarks();
-            renderArticles();
-        }
-
         /* Essential System Control Hooks */
         function searchArticles() { searchQuery = document.getElementById('article-search').value; renderArticles(); }
         function changeSortOrder() { currentSort = document.getElementById('sort-selector').value; renderArticles(); }
@@ -1315,25 +1324,6 @@
                 <div class="shimmer-card h-48 bg-m3-surfaceContainer rounded-3xl p-5"><div class="shimmer-bg h-4 w-1/4 rounded mb-2"></div><div class="shimmer-bg h-6 w-3/4 rounded"></div></div>
                 <div class="shimmer-card h-48 bg-m3-surfaceContainer rounded-3xl p-5"><div class="shimmer-bg h-4 w-1/3 rounded mb-2"></div><div class="shimmer-bg h-6 w-2/3 rounded"></div></div>
             `;
-        }
-
-        function getPlainText(str) {
-            const d = document.createElement("div"); 
-            d.innerHTML = str;
-            return (d.textContent || d.innerText || "").trim();
-        }
-
-        function cleanHtmlString(str) {
-            const txt = getPlainText(str);
-            return txt.substring(0, 140).trim() + (txt.length > 140 ? '...' : '');
-        }
-
-        function hashCode(s) { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return Math.abs(h); }
-        
-        function getRandomImageFallback(title) { 
-            const imageIds = ['1618005182384-a83a8bd57fbe','1579546929518-9e396f3cc809','1550751827-4bd374c3f58b','1526374965328-7f61d4dc18c5'];
-            const id = imageIds[hashCode(title) % imageIds.length];
-            return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=500&q=80`; 
         }
 
         function openArticleDetail(articleId) {
