@@ -442,13 +442,25 @@
         let selectedProxy = 'rss2json';
         let editingFeedId = null; 
 
-        // Register the Service Worker relative to current base path to handle GitHub Pages subfolders
+        // FIXED: Service worker auto-update logic with controllerchange automatic reloads
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
                 navigator.serviceWorker.register(`${basePath}sw.js`)
-                    .then((reg) => console.log('Service Worker registered successfully!', reg.scope))
+                    .then((reg) => {
+                        console.log('Service Worker registered successfully!', reg.scope);
+                        // Silently ping the worker to look for newer deployments
+                        reg.update();
+                    })
                     .catch((err) => console.error('Service Worker registration failed:', err));
+            });
+
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    window.location.reload();
+                    refreshing = true;
+                }
             });
         }
 
@@ -1126,6 +1138,7 @@
         function changeSortOrder() { currentSort = document.getElementById('sort-selector').value; renderArticles(); }
         function refreshCurrentFeeds() { fetchAllFeedArticles(); }
         
+        // Modal management
         function openModal(id) { 
             document.getElementById(id).classList.remove('hidden'); 
             if(id==='manage-feeds-modal') renderManageFeedsList(); 
